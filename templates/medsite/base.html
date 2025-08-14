@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <title>{% block title %}{% endblock %}</title>
+    <!-- Подключаем Bootstrap -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" />
+    <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+</head>
+<body>
+<div class="container mt-4">
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="/">Медицинская диагностика</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+                    <ul class="navbar-nav mr-auto">
+                        <li><a class="nav-link" href="{% url 'medsite:index' %}">Главная</a></li>
+                        <li><a class="nav-link" href="{% url 'medsite:about_the_company' %}">О компании</a></li>
+                        <li><a class="nav-link" href="{% url 'medsite:services_page' %}">Наши услуги</a></li>
+                        <li><a class="nav-link" href="{% url 'medsite:contacts' %}">Контакты</a></li>
+                        {% if request.user.is_authenticated %}
+                            <li><a class="nav-link" href="{% url 'users:profile' %}">Кабинет пациента</a></li>
+                            <li><a class="nav-link" href="{% url 'users:logout' %}">Выход</a></li>
+                        {% else %}
+                            <li><a class="nav-link" href="{% url 'users:login' %}">Войти</a></li>
+                            <li><a class="nav-link" href="{% url 'users:register' %}">Зарегистрироваться</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <main role="main" class="mt-4">
+        {% block content %}{% endblock %}
+    </main>
+</div>
+</body>
+</html>
