@@ -13,7 +13,7 @@ class RegisterView(CreateView):
     model = CustomUser
     form_class = CustomUserCreationForm
     template_name = "users/register.html"
-    success_url = reverse_lazy("medsite:home")
+    success_url = reverse_lazy("medsite:index")
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -42,7 +42,7 @@ class CustomLoginView(LoginView):
 
 
 class CustomLogoutView(LogoutView):
-    next_page = reverse_lazy("app:home")
+    next_page = reverse_lazy("medsite:index")
 
 
 class ProfileView(LoginRequiredMixin, DetailView):
