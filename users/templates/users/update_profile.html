@@ -1,0 +1,20 @@
+{% extends 'medsite/base.html' %}
+{% block title %}Редактировать профиль{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h2>Редактировать профиль</h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+    </form>
+</div>
+{% endblock %}

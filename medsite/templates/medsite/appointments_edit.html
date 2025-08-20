@@ -1,0 +1,13 @@
+{% extends 'medsite/base.html' %}
+{% block title %}Кабинет пациента{% endblock %}
+{% block content %}
+<title>Редактирование встречи</title>
+<body>
+    <h1>Редактировать встречу:</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit" value="Сохранить"/>
+    </form>
+</body>
+{% endblock %}

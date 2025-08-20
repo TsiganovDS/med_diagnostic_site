@@ -3,22 +3,18 @@ from django.db import models
 
 
 class CustomUser(AbstractUser):
-    email = models.EmailField(unique=True)
+    username = None
+    email = models.EmailField(unique=True, verbose_name='E-mail')
+    birth_day = models.DateField(verbose_name='дата рождения')
+    phone = models.CharField(unique=True, max_length=35, verbose_name='номер телефона')
 
-    USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["username"]
+    USERNAME_FIELD = 'email'
 
-    def __str__(self):
-        return self.email
+    REQUIRED_FIELDS = []
 
-    groups = models.ManyToManyField(
-        Group,
-        related_name="custom_user_set",
-        blank=True,
-    )
 
-    user_permissions = models.ManyToManyField(
-        Permission,
-        related_name="custom_user_set",
-        blank=True,
-    )
+    class Meta:
+        verbose_name = 'пациент'
+        verbose_name_plural = 'пациенты'
+
+

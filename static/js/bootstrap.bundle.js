@@ -3347,11 +3347,11 @@
           runModifierEffects();
           return instance.update();
         },
-        // Sync update – it will always be executed, even if not necessary. This
+        // Sync registration – it will always be executed, even if not necessary. This
         // is useful for low frequency updates where sync behavior simplifies the
         // logic.
         // For high frequency updates (e.g. `resize` and `scroll` events), always
-        // prefer the async Popper#update method
+        // prefer the async Popper#registration method
         forceUpdate: function forceUpdate() {
           if (isDestroyed) {
             return;
@@ -3370,16 +3370,16 @@
           state.rects = {
             reference: getCompositeRect(reference, getOffsetParent(popper), state.options.strategy === 'fixed'),
             popper: getLayoutRect(popper)
-          }; // Modifiers have the ability to reset the current update cycle. The
+          }; // Modifiers have the ability to reset the current registration cycle. The
           // most common use case for this is the `flip` modifier changing the
           // placement, which then needs to re-run all the modifiers, because the
           // logic was previously ran for the previous placement and is therefore
           // stale/incorrect
 
           state.reset = false;
-          state.placement = state.options.placement; // On each update cycle, the `modifiersData` property for each modifier
+          state.placement = state.options.placement; // On each registration cycle, the `modifiersData` property for each modifier
           // is filled with the initial data specified by the modifier. This means
-          // it doesn't persist and is fresh on each update.
+          // it doesn't persist and is fresh on each registration.
           // To ensure persistent data, use `${name}#persistent`
 
           state.orderedModifiers.forEach(function (modifier) {
@@ -3409,7 +3409,7 @@
             }
           }
         },
-        // Async and optimistically optimized update – it will not be executed if
+        // Async and optimistically optimized registration – it will not be executed if
         // not necessary (debounced to run at most once-per-tick)
         update: debounce(function () {
           return new Promise(function (resolve) {
@@ -3432,7 +3432,7 @@
           options.onFirstUpdate(state);
         }
       }); // Modifiers have the ability to execute arbitrary code before the first
-      // update cycle runs. They will be executed in the same order as the update
+      // registration cycle runs. They will be executed in the same order as the registration
       // cycle. This is useful when a modifier adds some persistent data that
       // other modifiers need to use, but the modifier is run after the dependent
       // one.

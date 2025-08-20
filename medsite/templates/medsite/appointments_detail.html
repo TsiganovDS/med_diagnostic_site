@@ -1,0 +1,13 @@
+{% extends 'medsite/base.html' %}
+{% block title %}Кабинет пациента{% endblock %}
+{% block content %}
+<title>Подробности встречи</title>
+<body>
+    <h1>Встреча:</h1>
+    <p>Дата и время: {{ appointment.date_time|date:"d/m/Y H:i" }}</p>
+    <p>Врач: {{ appointment.doctor }}</p>
+    <p>Описание: {{ appointment.description }}</p>
+    <a href="{% url 'medsite:appointment_edit' pk=appointment.pk %}">Редактировать</a>
+    <a href="{% url 'medsite:appointment_delete' pk=appointment.pk %}">Удалить</a>
+</body>
+{% endblock %}
