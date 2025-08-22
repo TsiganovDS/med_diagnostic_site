@@ -1,32 +1,27 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+from django.forms import DateInput
 
-
-from medsite.models import Patient
 from .models import CustomUser
 
 
 class CustomUserCreationForm(UserCreationForm):
+    birth_day = forms.DateField(
+        widget=forms.DateInput(attrs={'type': 'date'}),
+        required=False
+    )
+    phone = forms.CharField(
+        max_length=15,
+        required=False
+    )
+    class Meta(UserCreationForm.Meta):
+        model = CustomUser
+        fields = ('email', 'first_name', 'last_name', 'phone', 'birth_day')
+        widgets = {
+            'birth_day': DateInput(attrs={'type': 'date'}),
+        }
 
-    def clean_phone(self):
-        phone = self.cleaned_data.get('phone')
-        if CustomUser.objects.filter(phone=phone).exists():
-            raise forms.ValidationError("Данный номер телефона уже занят!")
-        return phone
-
+class CustomUserChangeForm(UserChangeForm):
     class Meta:
         model = CustomUser
-        fields = ('first_name', 'last_name', 'email', 'phone', 'birth_day', 'password1', 'password2')
-
-
-
-    def save(self, commit=True):
-        user = super().save(commit=False)
-        user.email = self.cleaned_data['email']
-        if commit:
-            user.save()
-            # Создание профиля пациента
-            Patient.objects.create(user=user)
-        return user
-
-
+        fields = ('email', 'first_name', 'last_name', 'phone', 'birth_day')

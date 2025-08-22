@@ -1,7 +1,7 @@
 from django.urls import path
 
 from .views import (CustomLoginView, CustomLogoutView,
-                    ProfileView, RegisterView, PatientProfileUpdateView)
+                    PatientProfileUpdateView, ProfileView, RegisterView)
 
 app_name = "users"
 
@@ -11,5 +11,5 @@ urlpatterns = [
     path("logout/", CustomLogoutView.as_view(), name="logout"),
     path("accounts/profile/", ProfileView.as_view(), name="profile"),
     path("profile/", ProfileView.as_view(), name="profile"),
-    path('profile/update/', PatientProfileUpdateView.as_view(), name='update_profile'),
+    path("profile/update/", PatientProfileUpdateView.as_view(), name="update_profile"),
 ]

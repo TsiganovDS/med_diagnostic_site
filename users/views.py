@@ -1,8 +1,8 @@
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView
-from django.contrib import messages
 from django.core.mail import send_mail
 from django.forms import inlineformset_factory
 from django.http import request
@@ -11,8 +11,9 @@ from django.urls import reverse_lazy
 from django.views import generic
 from django.views.generic import CreateView, DetailView, UpdateView
 
-from medsite.forms import PatientForm, AppointmentForm
-from medsite.models import Patient, Appointment
+from medsite.forms import AppointmentForm, PatientForm
+from medsite.models import Appointment, Patient
+
 from .forms import CustomUserCreationForm
 from .models import CustomUser
 
@@ -32,7 +33,7 @@ class RegisterView(CreateView):
         send_mail(
             subject="🎉 Добро пожаловать на сайт Медицинской диагностики!",
             message=(
-                f"Здравствуйте, {form.cleaned_data['last_name' 'first_name']}!\n\n"
+                f"Здравствуйте, {form.cleaned_data['last_name']} {form.cleaned_data['first_name']}!\n\n"
                 f"Вы успешно зарегистрировались. "
                 f"Если вы не регистрировались, просто проигнорируйте это письмо.\n"
             ),
@@ -56,29 +57,23 @@ class CustomLogoutView(LoginRequiredMixin, LogoutView):
 class ProfileView(LoginRequiredMixin, DetailView):
     model = CustomUser
     template_name = "users/profile.html"
-
-    success_url = reverse_lazy('users:profile')
+    context_object_name = "user_profile"
 
     def get_object(self, queryset=None):
         return self.request.user
 
-    def form_valid(self, form):
-        context_data = self.get_context_data()
-        formset = context_data['formset']
-        if formset.is_valid() and form.is_valid():
-            self.object = form.save()
-            formset.instance = self.object
-            formset.save()
-            return super().form_valid(form)
-        else:
-            return self.render_to_response(self.get_context_data(formset=formset, form=form))
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Профиль пользователя"
+        context["appointments"] = self.object.appointments.all().order_by("appointment_date")
+        return context
 
 
 class PatientProfileUpdateView(LoginRequiredMixin, generic.UpdateView):
     model = Patient
     form_class = PatientForm
-    template_name = 'users/update_profile.html'
-    success_url = reverse_lazy('medsite:appointment_list')
+    template_name = "users/update_profile.html"
+    success_url = reverse_lazy("users:profile")
 
     def get_object(self, queryset=None):
         # Получаем или создаем профиль пациента
@@ -90,17 +85,13 @@ class PatientProfileUpdateView(LoginRequiredMixin, generic.UpdateView):
 
         # Обновляем информацию в CustomUser
         user = self.request.user
-        user.first_name = form.cleaned_data.get('first_name', user.first_name)
-        user.last_name = form.cleaned_data.get('last_name', user.last_name)
+        user.first_name = form.cleaned_data.get("first_name", user.first_name)
+        user.last_name = form.cleaned_data.get("last_name", user.last_name)
         user.save()
 
-        messages.success(self.request, 'Ваш профиль успешно обновлён.')
+        messages.success(self.request, "Ваш профиль успешно обновлён.")
         return response
 
     def form_invalid(self, form):
-        messages.error(self.request, 'Ошибка при обновлении профиля.')
+        messages.error(self.request, "Ошибка при обновлении профиля.")
         return super().form_invalid(form)
-
-
-
-

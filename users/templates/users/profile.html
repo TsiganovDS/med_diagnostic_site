@@ -1,8 +1,8 @@
 {% extends 'medsite/base.html' %}
-{% block title %}Кабинет пациента{% endblock %}
+{% block title %}{{ title }}{% endblock %}
 {% block content %}
 <div class="container mt-5">
-    <h1 class="display-4 text-center">Ваш кабинет пациента</h1>
+    <h2>Профиль пользователя</h2>
 
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-info text-white">
@@ -10,69 +10,78 @@
         </div>
         <div class="card-body">
             <dl class="row">
-                <dt class="col-sm-3">ФИО:</dt>
-                <dd class="col-sm-9">{{ patient.get_full_name }}</dd>
+                <dt class="col-sm-3">Email:</dt>
+                <dd class="col-sm-9">{{ user_profile.email }}</dd>
 
-                <dt class="col-sm-3">Телефон:</dt>
-                <dd class="col-sm-9">{{ patient.phone }}</dd>
+                <dt class="col-sm-3">Имя:</dt>
+                <dd class="col-sm-9">{{ user_profile.first_name }}</dd>
 
-                <dt class="col-sm-3">Электронная почта:</dt>
-                <dd class="col-sm-9">{{ patient.email }}</dd>
+                <dt class="col-sm-3">Фамилия:</dt>
+                <dd class="col-sm-9">{{ user_profile.last_name }}</dd>
 
                 <dt class="col-sm-3">Дата рождения:</dt>
-                <dd class="col-sm-9">{{ patient.birth_day|date:'d-m-Y' }}</dd>
+                <dd class="col-sm-9">
+                    {% if user_profile.birth_day %}
+                        {{ user_profile.birth_day|date:'d-m-Y' }}
+                    {% else %}
+                        Не указана
+                    {% endif %}
+                </dd>
+
+                <dt class="col-sm-3">Телефон:</dt>
+                    <dd class="col-sm-9">
+                        {% if user_profile.phone %}
+                            {{ user_profile.phone }}
+                        {% else %}
+                            Не указан
+                        {% endif %}
+                    </dd>
             </dl>
         </div>
+    </div>
+    <div class="mt-4 d-flex justify-content-between align-items-center">
+        <a href="{% url 'users:update_profile' %}" class="btn btn-outline-primary">Редактировать профиль</a>
+        <a href="{% url 'medsite:appointment_list' %}">➕ Список</a>
+        <a href="{% url 'medsite:appointment_form' %}" class="btn btn-success">Записаться на прием</a>
     </div>
 
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-warning text-dark">
-            <h5>Назначенные приемы</h5>
-            <ul>
-                {% for appointment in appointments %}
-                    <li>
-                        {% if appointment.pk %}
-                            <a href="{% url 'medsite:appointment_detail' pk=appointment.pk %}">
-                                {{ appointment.appointment_date|date:"d-m-Y H:i" }} — {{ appointment.doctor }}
-                            </a>
-                        {% else %}
-                             {{ appointment.appointment_date|date:"d-m-Y H:i" }} — {{ appointment.doctor }}
-                        {% endif %}
-                    </li>
-                {% empty %}
-                    <li>Нет зарегистрированных встреч.</li>
-                {% endfor %}
-            </ul>
+            <h5>Запланированные приемы</h5>
         </div>
         <div class="card-body">
             {% if appointments %}
-                <table class="table table-hover">
+                <table class="table table-striped">
                     <thead>
                         <tr>
-                            <th scope="col">Врач</th>
-                            <th scope="col">Дата и время</th>
-                            <th scope="col">Причина</th>
+                            <th>Врач</th>
+                            <th>Дата</th>
+                            <th>Время</th>
+                            <th>Причина обращения</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for appointment in appointments %}
+                         {% for appointment in appointments %}
                             <tr>
-                                <td>{{ appointment.doctor }}</td>
-                                <td>{{ appointment.appointment_date|date:'d-m-Y H:i' }}</td>
+                                <td> {{ appointment.doctor }}</td>
+                                <td>{{ appointment.appointment_date|date:'d.m.Y' }}</td>
+                                <td>{{ appointment.appointment_time|time:"H:i" }}</td>
                                 <td>{{ appointment.reason }}</td>
+                                <td>
+                                    <a href="{% url 'medsite:appointment_edit' pk=appointment.pk %}" class="btn btn-outline-primary btn-sm">
+                                        ✏️ Редактировать
+                                    </a>
+                                    <a href="{% url 'medsite:appointment_delete' pk=appointment.pk %}" class="btn btn-danger btn-sm">🗑️ Удалить</a>
+                                </td>
+
                             </tr>
                         {% endfor %}
-                    </tbody>
                 </table>
             {% else %}
-                <p>У вас нет назначенных приемов.</p>
+                <p>У вас нет запланированных приемов</p>
             {% endif %}
         </div>
     </div>
-</div>
-<div class="mt-4 d-flex justify-content-between align-items-center">
-    <a href="{% url 'users:update_profile' %}" class="btn btn-outline-primary">Редактировать профиль</a>
-    <a href="{% url 'medsite:appointment_create' %}" class="btn btn-success">Записаться на прием</a>
-</div>
 
+</div>
 {% endblock %}

@@ -1,105 +1,300 @@
 {% extends 'medsite/base.html' %}
 {% block title %}О компании{% endblock %}
 {% block content %}
-<head>
-    <style>
 
-        h2 {
-            font-size: 2.5em;
-            margin-top: 0;
-        }
+    <!-- Подключение Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+    /* Общие стили */
+    body {
+        background-color: #f8f9fa;
+        font-family: 'Roboto', sans-serif;
+    }
 
-        p {
-            margin: 10px 0;
-        }
+    .header-section {
+        background: linear-gradient(180deg, #007bff, #28a745);
+        color: white;
+        padding: 5rem 1rem;
+    }
 
-        ol {
-            padding-left: 20px;
-        }
+    .doctor-card {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.3s, filter 0.3s;
+        cursor: pointer;
+        filter: grayscale(100%);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
 
-        ul {
-            list-style-type: none;
-            padding-left: 0;
-        }
+    .doctor-card:hover {
+        transform: scale(1.02);
+        filter: grayscale(0%);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
 
-        .doctor-details > li:first-child {
-            font-weight: bold;
-        }
-    </style>
-    <title>Мелодия здоровья</title>
-</head>
-<body>
-<h2>История компании:</h2>
-<p>Наше отделение медицинской диагностики было основано в 2001 году с единственной целью:
-предоставить жителям Кемеровской области доступ к самым современным и точным методам обследования.
-Мы начинали с небольшого кабинета с одним УЗИ-аппаратом и за 24 года выросли в многопрофильный
-диагностический центр. На каждом этапе нашего развития мы стремились к совершенству, инвестируя в
-передовое оборудование и обучение наших специалистов, чтобы всегда быть на шаг впереди и гарантировать
-нашим пациентам наилучшие результаты.</p>
-<h2>Миссия и ценности:</h2>
-<h3>Наша Миссия:</h3>
-<p>Обеспечить каждого пациента максимально точной и своевременной диагностикой, используя
-передовые технологии и индивидуальный подход, чтобы способствовать быстрому выздоровлению
-и поддержанию здоровья на долгие годы.</p>
-<h3>Наши Ценности:</h3>
-<ol>
-    <li>Tочность и Надёжность: Мы стремимся к безошибочным результатам, ведь от них зависит здоровье наших пациентов.</li>
-    <li>Профессионализм: Наша команда — это высококвалифицированные специалисты, постоянно совершенствующие свои знания.</li>
-    <li> Забота о Пациенте: Мы создаём комфортную и дружелюбную атмосферу, уделяя внимание каждому, кто к нам обращается.</li>
-    <li>Инновации: Мы постоянно внедряем новейшие методики и оборудование для повышения качества диагностики.</li>
-    <li>Этика и Прозрачность: Мы работаем честно, открыто и с полным уважением к конфиденциальности наших пациентов.</li>
-</ol>
-<h2>Наши врачи:</h2>
-    <ol>
-        <li>
-            <ul class="doctor-details">
-                <li>Иванов Сергей Петрович</li>
-                {% load static %}
-                <img class="w-25" src="/media/ivanov.jpg" alt="Иванов Сергей Петрович">
-                <li>Должность: Врач-рентгенолог, заведующий отделением лучевой диагностики</li>
-                <li>Стаж: 22 года</li>
-                <li>Специализация: Цифровая рентгенография, КТ, МРТ (эксперт в области диагностики заболеваний органов грудной клетки и брюшной полости).</li>
-                <li>Дополнительно: Кандидат медицинских наук, автор более 30 научных публикаций. Сергей Петрович — наш флагман в лучевой диагностике, его заключения всегда максимально точны.</li>
-            </ul>
-        </li>
+    .doctor-photo {
+        width: 100%;
+        height: 400px; /* Фиксированная высота фото */
+        object-fit: cover;
+        order-radius: 8px 8px 0 0;
+    }
 
-        <li>
-            <ul class="doctor-details">
-                <li>Смирнова Анна Викторовна</li>
-                <img src="{{ MEDIA_URL }}ivanov.jpg" alt="Смирнова Анна Викторовна">
-                <li>Должность: Врач ультразвуковой диагностики (УЗД)</li>
-                <li>Стаж: 15 лет</li>
-                <li>Специализация: УЗИ органов брюшной полости, малого таза, щитовидной железы, молочных желёз, сосудов.</li>
-                <li>Дополнительно: Член Российской ассоциации специалистов ультразвуковой диагностики в медицине. Анна Викторовна — настоящий мастер своего дела, способная увидеть то, что другие могут пропустить.</li>
-            </ul>
-        </li>
-        <li>
-            <ul class="doctor-details">
-                <li>Кузнецов Олег Игоревич</li>
-                {% load static %}
-                <img class="w-25" src="/media/kuznetsov.jpg" alt="Кузнецов Олег Игоревич">
-                <li>Должность: Врач клинической лабораторной диагностики</li>
-                <li>Стаж: 10 лет</li>
-                <li>Специализация: Общеклинические, биохимические, иммунологические и гормональные исследования.</li>
-                <li>Дополнительно: Эксперт в интерпретации сложных лабораторных показателей, постоянно внедряет новые методики. Олег Игоревич гарантирует, что каждый анализ будет проведён с ювелирной точностью.</li>
-            </ul>
-        <li>
-            <ul class="doctor-details">
-                <li>Козлов Михаил Александрович</li>
-                <img class="w-25" src="/media/kozlov.jpg" alt="Козлов Михаил Александрович">
-                <li>Должность: Врач-электрокардиографист, руководитель отдела функциональной диагностики.</li>
-                <li>Стаж: 17 лет</li>
-                <li>Специализация: ЭКГ-диагностика нарушений ритма сердца, суточное мониторирование артериального давления и Холтеровского мониторинга.</li>
-                <li>Дополнительно: Сертифицированный специалист по электрокардиографии, имеет опыт ведения сложных клинических случаев. Павел Андреевич признан эксперт в точной расшифровке сердечных ритмов и разработке эффективных рекомендаций по лечению аритмий.</li>
-            </ul>
-        </li>
-        <li>
-            <ul class="doctor-details">
-                <li>Петрова Елена Сергеевна</li>
-                <li>Должность: Невролог</li>
-                <li>Стаж: 12 лет</li>
-                <li>Специализация: Диагностика и лечение неврологических расстройств, включая заболевания позвоночника и периферической нервной системы.</li>
-                <li>Дополнительно: Автор ряда статей по современным методикам лечения невралгии. Елене Сергеевне доверяют пациенты благодаря её внимательному отношению и профессиональному подходу.</li>
-            </ul>
-    </ol>
+    .card-content {
+        flex: 1;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .section-title {
+        background-color: #e9ecef;
+        padding: 2rem;
+        margin: 2rem 0;
+    }
+
+    .doctor-info {
+        display: none;
+        padding: 1rem;
+        background-color: #fff;
+    }
+
+    .doctor-info.show {
+        display: block;
+}
+</style>
+
+    <div class="container">
+        <!-- Заголовок страницы -->
+        <div class="header-section text-center">
+            <h1>О компании</h1>
+            <p class="lead">Добро пожаловать в медицинский центр "Мелодия здоровья"</p>
+        </div>
+
+        <!-- История компании -->
+        <div class="section-title">
+            <h2>История компании</h2>
+        </div>
+        <p class="text-justify">
+            Наше отделение медицинской диагностики было основано в 2001 году с единственной целью: предоставить жителям Кемеровской области доступ к самым современным и точным методам обследования. Мы начинали с небольшого кабинета с одним УЗИ-аппаратом и за 24 года выросли в многопрофильный диагностический центр.
+        </p>
+
+        <!-- Миссия и ценности -->
+        <div class="section-title">
+            <h2>Миссия и ценности</h2>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <h3>Наша Миссия</h3>
+                <p>Обеспечить каждого пациента максимально точной и своевременной диагностикой, используя передовые технологии и индивидуальный подход.</p>
+            </div>
+            <div class="col-md-6">
+                <h3>Наши Ценности</h3>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">Точность и Надёжность</li>
+                    <li class="list-group-item">Профессионализм</li>
+                    <li class="list-group-item">Забота о Пациенте</li>
+                    <li class="list-group-item">Инновации</li>
+                    <li class="list-group-item">Этика и Прозрачность</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Наши врачи -->
+        <div class="section-title">
+            <h2>Наши врачи</h2>
+        </div>
+        <div class="row gy-4">
+ 
+            <!-- Врач 1 -->
+            <div class="col-md-4">
+                <div class="doctor-card" onclick="showInfo(this)">
+                    <img src="/media/ivanov.jpg" class="doctor-photo" alt="Иванов Сергей Петрович">
+                    <div class="card-content">
+                        <h5 class="card-title">Иванов Сергей Петрович</h5>
+                        <p class="card-subtitle text-muted">Врач-рентгенолог, заведующий отделением лучевой диагностики</p>
+                    <div class="doctor-info">
+                        <ul>
+                            <li><strong>Стаж:</strong> 22 года</li>
+                            <li><strong>Специализация:</strong> Цифровая рентгенография, КТ, МРТ</li>
+                            <li><strong>Дополнительно:</strong> Кандидат медицинских наук, автор более 30 научных публикаций</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Врач 2 -->
+        <div class="col-md-4">
+            <div class="doctor-card" onclick="showInfo(this)">
+                <img src="/media/smirnova.jpg" class="doctor-photo" alt="Смирнова Анна Викторовна">
+                <div class="card-content">
+                    <h5 class="card-title">Смирнова Анна Викторовна</h5>
+                    <p class="card-subtitle text-muted">Врач ультразвуковой диагностики</p>
+                    <div class="doctor-info">
+                        <ul>
+                            <li><strong>Стаж:</strong> 15 лет</li>
+                            <li><strong>Специализация:</strong> УЗИ органов брюшной полости, малого таза</li>
+                            <li><strong>Дополнительно:</strong> Член Российской ассоциации специалистов ультразвуковой диагностики</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Врач 3 -->
+        <div class="col-md-4">
+            <div class="doctor-card" onclick="showInfo(this)">
+                <img src="/media/kuznetsov.jpg" class="doctor-photo" alt="Кузнецов Олег Игоревич">
+                <div class="card-content">
+                    <h5 class="card-title">Кузнецов Олег Игоревич</h5>
+                    <p class="card-subtitle text-muted">Врач клинической лабораторной диагностики</p>
+                    <div class="doctor-info">
+                        <ul>
+                            <li><strong>Стаж:</strong> 10 лет</li>
+                            <li><strong>Специализация:</strong> Общеклинические исследования</li>
+                            <li><strong>Дополнительно:</strong> Эксперт в интерпретации сложных показателей</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Врач 4 -->
+        <div class="col-md-4">
+            <div class="doctor-card" onclick="showInfo(this)">
+                <img src="/media/kozlov.jpg" class="doctor-photo" alt="Козлов Михаил Александрович">
+                <div class="card-content">
+                    <h5 class="card-title">Козлов Михаил Александрович</h5>
+                    <p class="card-subtitle text-muted">Врач-электрокардиографист</p>
+                    <div class="doctor-info">
+                        <ul>
+                            <li><strong>Стаж:</strong> 17 лет</li>
+                            <li><strong>Специализация:</strong> ЭКГ-диагностика</li>
+                            <li><strong>Дополнительно:</strong> Сертифицированный специалист по электрокардиографии</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+                
+        <div class="col-md-4">
+            <div class="doctor-card" onclick="showInfo(this)">
+                <img src="/media/sidorov.jpg" class="doctor-photo" alt="Сидоров Андрей Викторович">
+                <div class="card-content">
+                    <h5 class="card-title">Сидоров Андрей Викторович</h5>
+                    <p class="card-subtitle text-muted">Врач ультразвуковой диагностики.</p>
+                    <div class="doctor-info">
+                        <ul>
+                            <li><strong>Стаж:</strong> 10 лет</li>
+                            <li><strong>Специализация:</strong> УЗИ-диагностика органов брюшной полости и малого таза.</li>
+                            <li><strong>Дополнительно:</strong> Владеет методикой 3D-УЗИ.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div> 
+                
+        <div class="col-md-4">
+            <div class="doctor-card" onclick="showInfo(this)">
+                <img src="/media/antonov.jpg" class="doctor-photo" alt="Антонов Павел Андреевич">
+                <div class="card-content">
+                   <h5 class="card-title">Антонов Павел Андреевич</h5>
+                    <p class="card-subtitle text-muted">Специалист по функциональной диагностике.</p>
+                    <div class="doctor-info">
+                        <ul>
+                            <li><strong>Стаж:</strong> 11 лет</li>
+                            <li><strong>Специализация:</strong> Опытный диагност с многолетним опытом выявления патологий сердечно-сосудистой и дыхательной системы.</li>
+                            <li><strong>Дополнительно:</strong> Индивидуальный подход к каждому пациенту.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+                
+        <div class="col-md-4">
+            <div class="doctor-card" onclick="showInfo(this)">
+                <img src="/media/nikolaeva.jpg" class="doctor-photo" alt="Николаева Светлана Игоревна">
+                <div class="card-content">
+                   <h5 class="card-title">Николаева Светлана Игоревна</h5>
+                    <p class="card-subtitle text-muted">Специалист по функциональной диагностике.</p>
+                    <div class="doctor-info">
+                        <ul>
+                            <li><strong>Стаж:</strong> 9 лет</li>
+                            <li><strong>Специализация:</strong> Суточное мониторирование артериального давления, Эхо-КГ, нагрузочные тесты.</li>
+                            <li><strong>Дополнительно:</strong> Высококвалифицированный специалист, занимается сложными случаями гипертонии и сердечной недостаточности.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div> 
+                
+        <div class="col-md-4">
+            <div class="doctor-card" onclick="showInfo(this)">
+                <img src="/media/orlov.jpg" class="doctor-photo" alt="Орлов Дмитрий Владимирович">
+                <div class="card-content">
+                   <h5 class="card-title">Орлов Дмитрий Владимирович</h5>
+                    <p class="card-subtitle text-muted">Врач-физиотерапевт</p>
+                    <div class="doctor-info">
+                        <ul>
+                            <li><strong>Стаж:</strong> 10 лет</li>
+                            <li><strong>Специализация:</strong>  Функциональная диагностика нервной системы</li>
+                            <li><strong>Дополнительно:</strong> Опыт работы в федеральных медицинских центрах</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div> 
+                
+        <div class="col-md-4">
+            <div class="doctor-card" onclick="showInfo(this)">
+                <img src="/media/semenova.jpg" class="doctor-photo" alt="Семенова Марина Евгеньевна">
+                <div class="card-content">
+                   <h5 class="card-title">Семенова Марина Евгеньевна</h5>
+                    <p class="card-subtitle text-muted">Специалист по функциональной диагностике</p>
+                    <div class="doctor-info">
+                        <ul>
+                            <li><strong>Стаж:</strong> 10 лет</li>
+                            <li><strong>Специализация:</strong>  Исследование функции внешнего дыхания, стресс-тесты, ЭЭГ головного мозга.</li>
+                            <li><strong>Дополнительно:</strong> Ведёт научную деятельность и регулярно публикует научные статьи по вопросам современной диагностики функциональных нарушений.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- JavaScript для интерактивности -->
+<script>
+function showInfo(card) {
+    const info = card.querySelector('.doctor-info');
+    if (info.classList.contains('show')) {
+        info.classList.remove('show');
+    } else {
+        // Скрываем информацию у других карточек
+        document.querySelectorAll('.doctor-info').forEach(el => el.classList.remove('show'));
+        info.classList.add('show');
+    }
+}
+</script>
+
+<!-- Плавная прокрутка -->
+<script>
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+            behavior: 'smooth'
+        });
+    });
+});
+</script>
+
+<!-- Подключение Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>    
 {% endblock %}
