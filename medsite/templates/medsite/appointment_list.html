@@ -15,7 +15,7 @@
                         {% for appointment in appointments %}
                             <tr>
                                 <td>{{ appointment.doctor }}</td>
-                                <td>{{ appointment.appointment_date|date:'d-m-Y' }}</td>
+                                <td>{{ appointment.appointment_date|date:'d.m.Y' }}</td>
                                 <td>{{ appointment.appointment_time|time:"H:i" }}</td>
                                 <td>{{ appointment.reason }}</td>
                             </tr>

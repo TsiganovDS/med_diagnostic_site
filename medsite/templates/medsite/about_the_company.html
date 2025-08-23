@@ -1,9 +1,7 @@
 {% extends 'medsite/base.html' %}
 {% block title %}О компании{% endblock %}
 {% block content %}
-
-    <!-- Подключение Bootstrap CSS -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
 <style>
     /* Общие стили */
     body {
@@ -31,16 +29,17 @@
     }
 
     .doctor-card:hover {
-        transform: scale(1.02);
+        transform: scale(1.1);
         filter: grayscale(0%);
         box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        transition: transform 0.3s ease-in-out, filter 0.3s ease-in-out;
     }
 
     .doctor-photo {
         width: 100%;
-        height: 400px; /* Фиксированная высота фото */
+        height: 400px; 
         object-fit: cover;
-        order-radius: 8px 8px 0 0;
+        border-radius: 8px 8px 0 0;
     }
 
     .card-content {
@@ -49,6 +48,25 @@
         display: flex;
         flex-direction: column;
         justify-content: space-between;
+        transition: all 0.3s;
+    }
+
+    .card-content:hover {
+        background-color: rgba(255,255,255,0.9); /* Легкий фон при наведении */
+    }
+
+    .card-title, .card-subtitle {
+        transition: color 0.3s, text-shadow 0.3s;
+    }
+
+    .doctor-card:hover .card-title {
+        color: #007bff;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .doctor-card:hover .card-subtitle {
+        color: #28a745;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
     }
 
     .section-title {
@@ -65,7 +83,7 @@
 
     .doctor-info.show {
         display: block;
-}
+    }
 </style>
 
     <div class="container">
@@ -105,8 +123,8 @@
         </div>
 
         <!-- Наши врачи -->
-        <div class="section-title">
-            <h2>Наши врачи</h2>
+        <div>
+            <h1 id="team" >Наши врачи</h1>
         </div>
         <div class="row gy-4">
  
@@ -294,7 +312,4 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     });
 });
 </script>
-
-<!-- Подключение Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>    
 {% endblock %}

@@ -2,8 +2,7 @@
 {% block title %}Главная страница{% endblock %}
 {% block content %}
 <title>Мелодия здоровья - Центр медицинской диагностики</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
     <style>
         /* Дополнительные стили */
         body {
@@ -31,10 +30,10 @@
                     <p class="text-white mb-0">Центр медицинской диагностики</p>
                 </div>
                 <ul class="nav nav-pills">
-                    <li class="nav-item"><a class="nav-link" href="#about">О нас</a></li>
+                    <li class="nav-item"><a class="nav-link" href="about/">О нас</a></li>
                     <li class="nav-item"><a class="nav-link" href="services/">Услуги</a></li>
                     <li class="nav-item"><a class="nav-link" href="contacts/">Контакты</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#feedback">Обратная связь</a></li>
+                    <li class="nav-item"><a class="nav-link" href="feedback/">Обратная связь</a></li>
                 </ul>
             </nav>
         </div>
@@ -62,7 +61,11 @@
                 Мы используем передовые технологии и методы диагностики для сохранения вашего здоровья.
             </p>
             <ul class="list-group list-group-horizontal-md">
-                <li class="list-group-item">Опытные специалисты</li>
+                <li class="list-group-item">
+                    <a href="about/#team">
+                        Опытные специалисты
+                    </a>
+                </li>
                 <li class="list-group-item">Современное оборудование</li>
                 <li class="list-group-item">Комфортная атмосфера</li>
                 <li class="list-group-item">Доступные цены</li>
@@ -182,16 +185,16 @@
       <div class="col-md-4">
         <h5>О нас</h5>
         <ul class="list-unstyled">
-          <li><a href="#about">Наша миссия</a></li>
-          <li><a href="#services">Наши услуги</a></li>
-          <li><a href="#contacts">Контакты</a></li>
+          <li><a href="about/">Наша миссия</a></li>
+          <li><a href="services/">Наши услуги</a></li>
+          <li><a href="contacts/">Контакты</a></li>
         </ul>
       </div>
       <div class="col-md-4">
         <h5>Полезные ссылки</h5>
         <ul class="list-unstyled">
-          <li><a href="#">Прайс-лист</a></li>
-          <li><a href="#">Врачи</a></li>
+          <li><a href="services/">Прайс-лист</a></li>
+          <li><a href="about/">Врачи</a></li>
           <li><a href="#">Статьи</a></li>
         </ul>
       </div>

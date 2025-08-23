@@ -3,7 +3,7 @@ from django.urls import path
 from .views import (AboutView, AppointmentCreateView, AppointmentDeleteView,
                     AppointmentDetailView, AppointmentListView,
                     AppointmentUpdateView, ContactsView, HomeView,
-                    ServicesView, SuccessView, DoctorListView, DoctorUpdateView, DoctorRegistrationView)
+                    ServicesView, SuccessView, DoctorListView, DoctorUpdateView, DoctorRegistrationView, FeedbackView)
 
 app_name = "medsite"
 
@@ -30,4 +30,5 @@ urlpatterns = [
     path('doctors/', DoctorListView.as_view(), name='doctors'),
     path('doctor/update/<int:pk>/', DoctorUpdateView.as_view(), name='doctor_update'),
     path('register/doctor/', DoctorRegistrationView.as_view(), name='doctor_register'),
+    path('feedback/', FeedbackView.as_view(), name='form'),
  ]

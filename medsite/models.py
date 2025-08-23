@@ -230,3 +230,19 @@ class Appointment(models.Model):
 
             except AttributeError:
                 raise ValidationError("Некорректная длительность услуги")
+
+
+class Feedback(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    name = models.CharField('Имя', max_length=100)
+    email = models.EmailField('Email')
+    subject = models.CharField('Тема', max_length=200)
+    message = models.TextField('Сообщение')
+    created_at = models.DateTimeField('Дата создания', auto_now_add=True)
+    is_answered = models.BooleanField('Ответ получен', default=False)
+
+    def __str__(self):
+        return f"{self.subject} от {self.name}"
+
+
+

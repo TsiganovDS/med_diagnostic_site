@@ -1,19 +1,25 @@
 from datetime import datetime
-
-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.http import HttpResponseRedirect, request
-from django.shortcuts import get_object_or_404, redirect, render
+from django.core.exceptions import SuspiciousOperation
+from django.core.mail import EmailMultiAlternatives
+from django.http import JsonResponse
+from django.shortcuts import render, redirect
+
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from django.views import generic
+from django.views import generic, View
 from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
                                   TemplateView, UpdateView)
+import logging
 
-from medsite.forms import AppointmentForm, DoctorForm, DoctorRegistrationForm
+from config.settings import ADMIN_EMAIL_LIST
+
+logger = logging.getLogger(__name__)
+from config import settings
+from medsite.forms import AppointmentForm, DoctorForm, DoctorRegistrationForm, FeedbackForm
 
 from .models import Appointment, Doctor
 
@@ -115,10 +121,6 @@ class AppointmentCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-
-
-
-
 class AppointmentListView(ListView):
     model = Appointment
     context_object_name = "appointments"
@@ -129,6 +131,7 @@ class AppointmentListView(ListView):
         return Appointment.objects.filter(
             patient=self.request.user
         ).order_by('appointment_date', 'appointment_time')
+
 
 class AppointmentUpdateView(UpdateView):
     model = Appointment
@@ -169,8 +172,66 @@ class DoctorUpdateView(LoginRequiredMixin, UserPassesTestMixin, generic.UpdateVi
 class DoctorRegistrationView(generic.CreateView):
     form_class = DoctorRegistrationForm
     template_name = 'medsite/doctor_register.html'
-    success_url = reverse_lazy('login')
+    success_url = reverse_lazy('medsite:index')
 
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
+
+
+class FeedbackView(View):
+    form_class = FeedbackForm
+    success_url = reverse_lazy('medsite:index')
+
+    def get(self, request, *args, **kwargs):
+        form = self.form_class()
+        return render(request, 'medsite/form.html', {'form': form})
+
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST)
+        try:
+            feedback = form.save(commit=False)
+            if request.user.is_authenticated:
+                feedback.user = request.user
+            feedback.save()
+
+            self.send_notification_email(feedback)
+            return redirect('medsite:index')
+
+
+        except Exception as e:
+            logger.error(f"Ошибка при сохранении или отправке: {str(e)}")
+            return JsonResponse({'success': False, 'message': 'Произошла ошибка при обработке запроса'})
+
+    def send_notification_email(self, feedback):
+        # Проверяем настройки email в settings
+        if not settings.EMAIL_HOST or not settings.EMAIL_HOST_USER:
+            raise Exception("Не настроены параметры email в settings.py")
+
+        # Сообщение для администраторов
+        admin_recipients = getattr(settings, ADMIN_EMAIL_LIST, ['dm.tsiganov@icloud.com'])
+        if not isinstance(admin_recipients, list):
+            admin_recipients = admin_recipients
+
+        admin_email = EmailMultiAlternatives(
+            'Новое сообщение от пациента',
+            f"От: {feedback.name} ({feedback.email})\n"
+            f"Тема: {feedback.subject}\n\n"
+            f"Сообщение: {feedback.message}",
+            settings.DEFAULT_FROM_EMAIL,
+            admin_recipients
+        )
+        admin_email.send()
+
+        # Сообщение для пациента
+        if feedback.email:
+            patient_email = EmailMultiAlternatives(
+                'Спасибо за обращение в клинику',
+                f"Уважаемый {feedback.name},\n\n"
+                f"Благодарим вас за обращение в нашу клинику.\n"
+                f"Мы получили ваше сообщение по теме: {feedback.subject}\n\n"
+                f"Наш специалист свяжется с вами в ближайшее время.",
+                settings.DEFAULT_FROM_EMAIL,
+                [feedback.email]
+            )
+            patient_email.send()

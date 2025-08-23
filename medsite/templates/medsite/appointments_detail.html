@@ -4,7 +4,7 @@
 <title>Прием врача</title>
 <body>
     <h1>Прием врача:</h1>
-    <p>Дата и время: {{ appointment.date_time|date:"d/m/Y H:i" }}</p>
+    <p>Дата и время: {{ appointment.date_time|date:"d.m.Y H:i" }}</p>
     <p>Врач: {{ appointment.doctor }}</p>
     <p>Причина обращения: {{ appointment.reason }}</p>
     <a href="{% url 'medsite:appointment_edit' pk=appointment.pk %}">Редактировать</a>

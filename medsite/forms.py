@@ -3,12 +3,12 @@ from datetime import datetime
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
-from django.core.exceptions import ValidationError
+
 from django.utils import timezone
 
 from config import settings
 from users.models import CustomUser
-from .models import Appointment, Doctor, Patient, Service
+from .models import Appointment, Doctor, Patient, Service, Feedback
 
 
 class PatientForm(forms.ModelForm):
@@ -115,6 +115,37 @@ class DoctorRegistrationForm(UserCreationForm):
             )
             doctor.services.set(self.cleaned_data['services'])
             return user
+
+
+class FeedbackForm(forms.ModelForm):
+    class Meta:
+        model = Feedback
+        fields = ['name', 'email', 'subject', 'message']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Введите ваше имя'
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Введите email'
+            }),
+            'subject': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Тема сообщения'
+            }),
+            'message': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 5,
+                'placeholder': 'Ваше сообщение'
+            })
+        }
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if not email:
+            raise forms.ValidationError('Пожалуйста, введите корректный email')
+        return email
 
 
 
