@@ -7,21 +7,19 @@ from .models import CustomUser
 
 class CustomUserCreationForm(UserCreationForm):
     birth_day = forms.DateField(
-        widget=forms.DateInput(attrs={'type': 'date'}),
-        required=False
+        widget=forms.DateInput(attrs={"type": "date"}), required=False
     )
-    phone = forms.CharField(
-        max_length=15,
-        required=False
-    )
+    phone = forms.CharField(max_length=15, required=False)
+
     class Meta(UserCreationForm.Meta):
         model = CustomUser
-        fields = ('email', 'first_name', 'last_name', 'phone', 'birth_day')
+        fields = ("email", "first_name", "last_name", "phone", "birth_day")
         widgets = {
-            'birth_day': DateInput(attrs={'type': 'date'}),
+            "birth_day": DateInput(attrs={"type": "date"}),
         }
+
 
 class CustomUserChangeForm(UserChangeForm):
     class Meta:
         model = CustomUser
-        fields = ('email', 'first_name', 'last_name', 'phone', 'birth_day')
+        fields = ("email", "first_name", "last_name", "phone", "birth_day")

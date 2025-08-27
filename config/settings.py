@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 
+from django.core import cache
+from django.core.cache.backends.redis import RedisCache
 from django.core.management import templates
 from dotenv import load_dotenv
 
@@ -25,6 +27,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    "django.contrib.sites",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -114,16 +117,39 @@ LOGOUT_REDIRECT_URL = "/"
 LOGIN_REDIRECT_URL = "/"
 AUTHENTICATION_BACKENDS = ("django.contrib.auth.backends.ModelBackend",)
 
+"""CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": os.getenv("REDIS_LOCATION"),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+    }
+}
+
+CELERY_BEAT_SCHEDULE = {
+    "send-reminders": {
+        "task": "medsite.tasks.send_appointment_reminders",
+        "schedule": crontab(hour=8, minute=0),
+    },
+    "cleanup-data": {
+        "task": "medsite.tasks.cleanup_old_data",
+        "schedule": crontab(day_of_week=0, hour=3),
+    },
+}
+
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"""
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-TIME_ZONE = 'Europe/Moscow'
+TIME_ZONE = "Europe/Moscow"
 USE_TZ = True
-LANGUAGE_CODE = 'ru'
+LANGUAGE_CODE = "ru"
 USE_I18N = True
 USE_L10N = True
-DATE_FORMAT = 'd.m.Y'
+DATE_FORMAT = "d.m.Y"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
