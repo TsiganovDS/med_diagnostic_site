@@ -1,0 +1,50 @@
+{% extends 'medsite/base.html' %}
+{% block title %}Контакты | Мелодия здоровья{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4"><span class="me-2">📞</span>Контакты</h1>
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h4 class="mb-3"><span class="me-2">🏥</span>Адрес</h4>
+            <p>г. Новокузнецк, пр. Кузнецкстроевский, д. 11</p>
+            <h4 class="mb-3"><span class="me-2">☎️</span>Телефоны</h4>
+            <p>
+                <a href="tel:+73843786543" class="link-primary">+7 (384) 3 78-65-43</a><br>
+                <a href="tel:+73843567865" class="link-primary">+7 (384) 3 56-78-65</a>
+            </p>
+            <h4 class="mb-3"><span class="me-2">✉️</span>Email</h4>
+            <p>
+                <a href="mailto:info@meloddiagno.ru" class="link-primary">info@meloddiagno.ru</a>
+            </p>
+        </div>
+        <div class="col-md-6">
+            <h4 class="mb-3"><span class="me-2">🗺️</span>Карта проезда</h4>
+            <div class="ratio ratio-4x3 rounded">
+                <iframe>
+                  src="https://yandex.ru/map-widget/v1/?um=constructor%3AEXAMPLE"
+                  style="border:0;" allowfullscreen loading="lazy"></iframe>
+                
+                <script src="https://maps.api.2gis.ru/2.0/loader.js"></script>
+                <div id="map" style="width:500px; height:400px"></div>
+                <script>
+                DG.then(function () {
+                     var map = DG.map('map', {
+                         center: [53.764749, 87.127007], 
+                         zoom: 13
+                     });
+                     DG.marker([53.764749, 87.127007]).addTo(map).bindPopup('Мелодия здоровья');
+                });
+                </script>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <h4 class="mb-3"><span class="me-2">📬</span>Обратная связь</h4>
+            <a href="{% url 'medsite:form' %}" class="btn btn-outline-primary">
+                Перейти к форме обратной связи
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

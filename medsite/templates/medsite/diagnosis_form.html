@@ -1,0 +1,17 @@
+{% extends 'medsite/base.html' %}
+{% block content %}
+    <h2>Добавление результатов диагностики</h2>
+    {% if diagnosis %}
+        <!-- Форма редактирования диагноза -->
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Сохранить</button>
+        </form>
+    {% else %}    
+        <p>Диагноз не найден</p>
+    {% endif %}
+    <a class="btn btn-outline-primary" href="{% url 'medsite:appointment_detail' appointment_id %}">Вернуться к назначению</a>
+    <a class="btn btn-outline-primary" href="{% url 'medsite:patient_history' %}">Вернуться к истории записей</a>
+{% endblock %}
+

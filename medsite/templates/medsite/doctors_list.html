@@ -1,0 +1,15 @@
+{% extends 'medsite/base.html' %}
+{% block title %}Специалисты отделения функциональной диагностики{% endblock %}
+{% block content %}
+<h2>Врачи</h2>
+
+{% for doctor in doctors %}
+    <div class="doctor-card">
+        <img src="{{ doctor.photo.url }}" alt="Фото специалиста">
+        <h3>{{ doctor.user.get_full_name }}</h3>
+        <p>Специальность: {{ doctor.specialty }}</p>
+        <p>Стаж: {{ doctor.experience }} лет</p>
+        <p>График работы: {{ doctor.schedule }}</p>
+    </div>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends 'medsite/base.html' %}
+{% block title %}Обратная связь{% endblock %}
+{% block content %}
+{{ greeting }}    
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+    <div style="min-width: 350px; max-width: 400px; width: 100%;">
+        <h1 class="text-center text-secondary-emphasis fw-light" >Напишите нам</h1>
+        <form id="feedback-form" class="text-primary" method="post">
+            {% csrf_token %}
+            <div class="form-group mb-3">
+                {{ form.name.label_tag }}
+                {{ form.name }}
+                {% if form.name.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.name.errors %}
+                            {{ error }}<br>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group mb-3">
+                {{ form.email.label_tag }}
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.email.errors %}
+                            {{ error }}<br>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group mb-3">
+                {{ form.subject.label_tag }}
+                {{ form.subject }}
+                {% if form.subject.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.subject.errors %}
+                            {{ error }}<br>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group mb-3">
+                {{ form.message.label_tag }}
+                {{ form.message }}
+                {% if form.message.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.message.errors %}
+                            {{ error }}<br>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Отправить</button>
+        </form>
+
+    </div>
+</div>
+{% endblock %}

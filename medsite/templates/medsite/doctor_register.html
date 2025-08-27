@@ -1,0 +1,9 @@
+{% extends 'medsite/base.html' %}
+{% block title %}Регистрация врача{% endblock %}
+{% block content %}
+<form method="post">
+ {% csrf_token %}
+ {{ form.as_p }}
+ <button type="submit">Зарегистрировать врача</button>
+</form>
+{% endblock %}

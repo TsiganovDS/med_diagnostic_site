@@ -1,0 +1,25 @@
+{% extends 'medsite/base.html' %}
+{% block title %}Специалисты отделения функциональной диагностики{% endblock %}
+{% block content %}
+<h2>История записей</h2>
+<ul>
+    {% for appointment in appointments %}
+    <li>
+        {{ appointment.appointment_date|date:"d.m.Y" }} {{ appointment.appointment_time|time:"H:i" }} - 
+        {{ appointment.service }}
+        <a href="{% url 'medsite:appointment_detail' appointment.pk %}">Подробнее</a>
+    </li>
+    {% endfor %}
+</ul>
+<div class="pagination">
+    {% if is_paginated %}
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}">Предыдущая</a>
+        {% endif %}
+        Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">Следующая</a>
+        {% endif %}
+    {% endif %}
+</div>   
+{% endblock %}

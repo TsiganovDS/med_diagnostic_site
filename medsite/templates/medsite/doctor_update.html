@@ -1,0 +1,77 @@
+{% extends 'medsite/base.html' %}
+{% load static %}
+
+{% block title %}Редактирование профиля врача{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow p-3 mb-5 bg-white rounded">
+                <div class="card-header">
+                    <h3>Редактирование профиля врача</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="form-group">
+                            <label for="first_name">Имя</label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}
+                                <div class="invalid-feedback">{{ form.first_name.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="last_name">Фамилия</label>
+                            {{ form.last_name }}
+                            {% if form.last_name.errors %}
+                                <div class="invalid-feedback">{{ form.last_name.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="middle_name">Отчество</label>
+                            {{ form.middle_name }}
+                            {% if form.middle_name.errors %}
+                                <div class="invalid-feedback">{{ form.middle_name.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="specialization">Специализация</label>
+                            {{ form.specialization }}
+                            {% if form.specialization.errors %}
+                                <div class="invalid-feedback">{{ form.specialization.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="description">Описание</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="invalid-feedback">{{ form.description.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="equipment_type">Тип оборудования</label>
+                            {{ form.equipment_type }}
+                            {% if form.equipment_type.errors %}
+                                <div class="invalid-feedback">{{ form.equipment_type.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                            <a href="{% url 'doctor_profile' %}" class="btn btn-secondary">Отмена</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

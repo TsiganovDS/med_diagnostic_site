@@ -1,0 +1,26 @@
+{% extends 'medsite/base.html' %}
+{% block title %}Кабинет пациента{% endblock %}
+{% block content %}
+<h2>🗓️ Записи на прием:</h2>
+<table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Врач</th>
+                            <th>Дата</th>
+                            <th>Время</th>
+                            <th>Причина обращения</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appointment in appointments %}
+                            <tr>
+                                <td>{{ appointment.doctor }}</td>
+                                <td>{{ appointment.appointment_date|date:'d.m.Y' }}</td>
+                                <td>{{ appointment.appointment_time|time:"H:i" }}</td>
+                                <td>{{ appointment.reason }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+<a href="{% url 'medsite:appointment_form' %}">➕ Новая встреча</a>
+{% endblock %}

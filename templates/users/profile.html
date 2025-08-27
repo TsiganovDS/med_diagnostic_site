@@ -1,0 +1,23 @@
+{% extends 'medsite/base.html' %}
+{% block title %}Личный кабинет{% endblock %}
+{% block content %}
+<h1>Личный кабинет</h1>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Специалист</th>
+            <th>Время приема</th>
+            <th>Описание</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for appointment in appointments %}
+        <tr>
+            <td>{{ appointment.doctor }}</td>
+            <td>{{ appointment.date_time }}</td>
+            <td>{{ appointment.description }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
