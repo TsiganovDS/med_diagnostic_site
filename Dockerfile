@@ -1,29 +1,16 @@
-FROM python:3.12.3
-
-# Включаем немедленное выполнение вывода программы
-ENV PYTHONUNBUFFERED=1
+FROM python:3.12-slim
 
 # Устанавливаем рабочую директорию в контейнере
 WORKDIR /app
 
-# Обновляем список пакетов и устанавливаем curl и gnupg для загрузки Poetry
-RUN apt-get update
-RUN apt-get install -y curl gnupg
+# Копируем зависимости в контейнер
+COPY /requirements.txt /
 
-# Загружаем и устанавливаем Poetry
-RUN curl -sSL https://install.python-poetry.org | python -
+# Устанавливаем зависимости
+RUN pip install -r /requirements.txt --no-cache-dir
 
-# Копируем файл с зависимостями и устанавливаем их
-COPY poetry.lock pyproject.toml ./
-RUN poetry install
-
-# Копируем остальные файлы проекта в контейнер
+# Копируем код приложения в контейнер
 COPY . .
 
-
-# Порт, который будет использовать контейнер
-EXPOSE 8000
-
-
-# Определяем команду для запуска приложения
+# Запуск приложения
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
