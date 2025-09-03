@@ -1,0 +1,164 @@
+{% extends 'medsite/base.html' %}
+{% block title %}Наши услуги{% endblock %}
+{% block content %}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <h1 class="text-center mb-5">{{ category.name }}</h1>
+            
+            {% if categories %}
+                {% for category in categories %}                    
+                    <div class="category-block mb-4">
+                        <h2 class="category-title">{{ category.name }}</h2>                       
+                        
+                        {% if category.services.exists %}
+                            <div class="row g-4">
+                                {% for service in category.services.all %}
+                                    <div class="col-md-6 col-lg-4">
+                                        <div class="card service-card shadow-sm">
+                                            <div class="card-body">
+                                                <h3 class="card-title service-name">{{ service.name }}</h3>
+                                                
+                                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                                    <div>
+                                                        <p class="service-price">
+                                                            <strong>Стоимость:</strong> {{ service.price }} руб.
+                                                        </p>
+                                                        <p class="service-duration">
+                                                            <strong>Длительность:</strong> {{ service.duration_minutes }} минут
+                                                        </p>
+                                                    </div>                                                    
+                                                    <a href="{% url 'medsite:appointment_form' service.pk %}" 
+                                                    class="btn btn-primary">
+                                                    Записаться
+                                                    </a>                                                 
+                                                </div>                                             
+                                                <div class="service-description mt-3">
+                                                    {% if service.description %}
+                                                        <p>{{ service.description }}</p>
+                                                    {% else %}
+                                                        <p class="text-muted">Описание услуги отсутствует</p>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}                            
+                            <div class="alert alert-info mt-3">
+                                В данной категории услуг пока нет
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% else %}                
+                <div class="alert alert-warning">
+                    Категории услуг не найдены
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if is_paginated %}
+<nav class="container mt-5">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+        {% endif %}
+        
+        <li class="page-item disabled">
+            <span class="page-link">
+                Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+            </span>
+        </li>
+        
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+<style>
+    .service-card {
+        border-radius: 8px;
+        background-color: #fff;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transition: 
+        transform 0.3s ease,
+        box-shadow 0.3s ease;
+        overflow: hidden;
+    }
+    .service-card:hover {
+        transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .service-card .card-title {
+        font-size: 1.2rem;
+        margin-bottom: 15px;
+    }
+
+    .service-card .card-body {
+        padding: 20px;
+    }
+
+    .service-card .service-price {
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: #333;
+    }
+
+    .service-card .service-duration {
+        color: #6c757d;
+    }
+
+    .service-card .btn-primary {
+        border-radius: 4px;
+        padding: 10px 20px;
+    }
+
+    .service-card .btn-primary:hover {
+        background-color: #007bff;
+    }
+
+    .category-block {
+        margin-bottom: 40px;
+    }
+
+    .category-title {
+        font-size: 1.8rem;
+        margin-bottom: 25px;
+        color: #111;
+    }
+
+    @media (max-width: 768px) {
+    .service-card {
+        margin-bottom: 20px;
+    }  
+    }
+    
+    @media (max-width: 576px) {
+    .service-card {
+        margin-bottom: 15px;
+    }
+    }
+</style>
+{% endblock %}
+
+
+
+
+
+    

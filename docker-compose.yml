@@ -1,16 +1,15 @@
 services:
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
+    command: >
+      sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     ports:
       - "9052:8000"
-    environment:
-      POSTGRES_DB: medsite
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1234
     depends_on:
       db:
         condition: service_healthy
+    environment:
+      - DATABASE_URL=postgres://${USER}${PASSWORD}@db:${PORT}/${NAME}
     networks:
       - django-network
 

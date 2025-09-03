@@ -1,0 +1,67 @@
+{% extends 'medsite/base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2>Детали записи на прием</h2>
+    <a href="{% url 'medsite:appointment_list' %}" class="btn btn-secondary mb-3">
+        Назад к списку записей
+    </a>
+
+    <div class="card mb-3">
+        <div class="card-header">
+            Основная информация
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Пациент:</strong> {{ appointment.patient.get_full_name }}</p>
+                    <p><strong>Врач:</strong> {{ appointment.doctor.user.get_full_name }}</p>
+                    <p><strong>Дата приема:</strong> {{ appointment.appointment_date|date:"d.m.Y" }}</p>
+                    <p><strong>Время приема:</strong> {{ appointment.appointment_time }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Причина обращения:</strong> {{ appointment.reason }}</p>
+                    <p>
+                        <strong>Статус:</strong>
+                        {% if appointment.status == 'pending' %}
+                            <span class="badge bg-warning">Ожидает</span>
+                        {% elif appointment.status == 'confirmed' %}
+                            <span class="badge bg-success">Подтверждена</span>
+                        {% elif appointment.status == 'cancelled' %}
+                            <span class="badge bg-danger">Отменена</span>
+                        {% else %}
+                            <span class="badge bg-info">Завершена</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            Диагнозы
+        </div>
+        <div class="card-body">
+            {% if appointment.diagnoses.all %}
+                <ul>
+                    {% for diagnosis in appointment.diagnoses.all %}
+                        <li>{{ diagnosis.name }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>Диагнозов нет</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end mt-3">
+        <a href="{% url 'medsite:appointment_edit' appointment.pk %}" class="btn btn-primary me-2">
+            Редактировать
+        </a>
+        <a href="{% url 'medsite:appointment_delete' appointment.pk %}" class="btn btn-danger">
+            Удалить
+        </a>
+    </div>
+</div>
+{% endblock %}

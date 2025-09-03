@@ -1,100 +1,45 @@
 {% extends 'medsite/base.html' %}
+
 {% block title %}Запись на прием{% endblock %}
+
 {% block content %}
-
-<!-- Добавляем блок для отображения сообщений -->
-{% if messages %}
-<div class="messages">
-    {% for message in messages %}
-    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-    {% endfor %}
-</div>
-{% endif %}
-
-<form method="post">
-    {% csrf_token %}
+<div class="container mt-5">
+    <h3>Запись на прием к врачу</h3>
     
-    {% if form.errors %}
-    <div class="alert alert-danger">
-        <h4>Ошибки в форме:</h4>
-        {{ form.errors }}
-    </div>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
     {% endif %}
-    
-    <div class="form-group">
-        {{ form.appointment_date.label_tag }}
-        {{ form.appointment_date }}
-        {% if form.appointment_date.errors %}
-        <div class="invalid-feedback">{{ form.appointment_date.errors }}</div>
-        {% endif %}
-    </div>
-    
-    <div class="form-group">
-        {{ form.appointment_time.label_tag }}
-        {{ form.appointment_time }}
-        {% if form.appointment_time.errors %}
-        <div class="invalid-feedback">{{ form.appointment_time.errors }}</div>
-        {% endif %}
-    </div>
-    
-    <div class="form-group">
-        {{ form.doctor.label_tag }}
-        {{ form.doctor }}
-        {% if form.doctor.errors %}
-        <div class="invalid-feedback">{{ form.doctor.errors }}</div>
-        {% endif %}
-    </div>
-    
-    <div class="form-group">
-        {{ form.service.label_tag }}
-        <select name="{{ form.service.html_name }}" id="{{ form.service.auto_id }}" class="form-control">
-            <option value="" disabled selected>Выберите услугу</option>
-            {% for service in form.service.field.queryset %}
-                <option value="{{ service.pk }}">{{ service.name }} ({{ service.duration_minutes }} мин)</option>
-            {% endfor %}
-        </select>
-        {% if form.service.errors %}
-           <div class="invalid-feedback">{{ form.service.errors }}</div>
-        {% endif %}
-    </div>
-    
-    <div class="form-group">
-        {{ form.reason.label_tag }}
-        {{ form.reason }}
-        {% if form.reason.errors %}
-            <div class="invalid-feedback">{{ form.reason.errors }}</div>
-        {% endif %}
-    </div>
-    
-    <button type="submit" class="btn btn-primary">Записаться</button>
-</form>
+
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            {{ form.as_p }}
+        </div>
+
+        <!-- Скрываем поле пациента -->
+        {{ form.patient.as_hidden }}
+
+        <button type="submit" class="btn btn-primary">Записаться</button>
+        <a href="{% url 'users:profile' %}" class="btn btn-secondary">Отмена</a>
+    </form>
+</div>
 
 <style>
-    .invalid-feedback {
-        display: block;
-    }
-    
     .form-group {
-        margin-bottom: 20px;
-    }
-    
-    .container {
-        max-width: 600px;
-    }
-    
-    @media (max-width: 768px) {
-        .col-md-6 {
-            margin-bottom: 20px;
-        }
-    }
-    
-    /* Добавляем стили для сообщений */
-    .messages {
-        margin-bottom: 20px;
-    }
-    
-    .alert {
         margin-bottom: 15px;
+    }
+    
+    label {
+        font-weight: bold;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 8px;
+        margin-top: 5px;
     }
 </style>
 {% endblock %}

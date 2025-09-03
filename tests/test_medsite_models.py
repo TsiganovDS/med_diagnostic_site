@@ -1,13 +1,14 @@
-from django.core.exceptions import ValidationError
+import uuid
+from datetime import datetime, time
+
 from django.test import TestCase
 from django.utils import timezone
-from datetime import datetime, timedelta
 
-from medsite.models import Doctor, Service, Appointment, ServiceCategory
+from medsite.models import Appointment, Doctor, Patient, Service, ServiceCategory
 from users.models import CustomUser
 
 
-class AppointmentModelTest(TestCase):
+class TestAppointmentModel(TestCase):
     def setUp(self):
         # Создаем необходимые объекты для тестов
         self.patient = CustomUser.objects.create_user(
@@ -48,17 +49,6 @@ class AppointmentModelTest(TestCase):
         self.assertEqual(appointment.doctor, self.doctor)
         self.assertEqual(appointment.service, self.service)
 
-    def test_get_full_datetime(self):
-        """Тест метода получения полной даты и времени"""
-        appointment = Appointment.objects.create(
-            patient=self.patient,
-            appointment_date=timezone.now().date(),
-            appointment_time=timezone.now().time(),
-        )
-
-        full_datetime = appointment.get_full_datetime()
-        self.assertIsNotNone(full_datetime)
-
     def test_get_absolute_url(self):
         """Тест получения URL записи"""
         appointment = Appointment.objects.create(
@@ -82,7 +72,7 @@ class AppointmentModelTest(TestCase):
         self.assertEqual(appointment.get_results_link(), "Нет результатов")
 
 
-class DoctorModelTest(TestCase):
+class TestDoctorModel(TestCase):
     def setUp(self):
         # Создаем пользователя для врача
         self.user = CustomUser.objects.create_user(
@@ -151,3 +141,55 @@ class DoctorModelTest(TestCase):
             is_active=False,
         )
         self.assertFalse(inactive_doctor.is_active)
+
+
+class TestAppointmentStrMethod(TestCase):
+    def setUp(self):
+        # Генерируем уникальные email адреса
+        patient_email = f"patient_{uuid.uuid4()}@example.com"
+        doctor_email = f"doctor_{uuid.uuid4()}@example.com"
+
+        # Создаем тестовых пользователей
+        self.patient_user = CustomUser.objects.create(
+            email=patient_email, first_name="Пациент", last_name="Иванович"
+        )
+        self.doctor_user = CustomUser.objects.create(
+            email=doctor_email, first_name="Доктор", last_name="Петрович"
+        )
+
+        # Создаем профили пациентов и врачей
+        self.patient = Patient.objects.create(user=self.patient_user)
+        self.doctor = Doctor.objects.create(user=self.doctor_user)
+
+        # Создаем запись, используя правильные типы данных
+        self.appointment = Appointment.objects.create(
+            patient=self.patient_user,
+            doctor=self.doctor,
+            appointment_date=timezone.now().date(),
+            appointment_time=time(14, 30),
+        )
+
+    def test_full_info(self):
+        expected_str = (
+            f"Запись Пациент Иванович к  на "
+            f"{datetime.combine(self.appointment.appointment_date,
+                                self.appointment.appointment_time).strftime('%d.%m.%Y %H:%M')}"
+        )
+        self.assertEqual(str(self.appointment), expected_str)
+
+    def test_no_doctor(self):
+        self.appointment.doctor = None
+        self.appointment.save()
+        expected_str = (
+            f"Запись Пациент Иванович к Неизвестно на "
+            f"{datetime.combine(self.appointment.appointment_date,
+                                self.appointment.appointment_time).strftime('%d.%m.%Y %H:%M')}"
+        )
+        self.assertEqual(str(self.appointment), expected_str)
+
+    def test_only_time(self):
+        expected_str = (
+            f"Запись Пациент Иванович к  на 03.09.2025 "
+            f"{self.appointment.appointment_time.strftime('%H:%M')}"
+        )
+        self.assertEqual(str(self.appointment), expected_str)

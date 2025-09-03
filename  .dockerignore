@@ -1,0 +1,15 @@
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.swp
+*.swo
+*.log
+*.tmp
+*.bak
+*.DS_Store
+.git/
+.gitignore
+.idea/
+.vscode/

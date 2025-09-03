@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     "medsite",
 ]
 
+CRISPY_TEMPLATE_PACK = "bootstrap5"
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -84,6 +86,7 @@ DATABASES = {
 
 AUTH_USER_MODEL = "users.CustomUser"
 
+
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
@@ -112,34 +115,11 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 ADMIN_EMAIL_LIST = os.getenv("ADMIN_EMAIL_LIST")
 
+
 LOGIN_URL = "/accounts/login/"
 LOGOUT_REDIRECT_URL = "/"
 LOGIN_REDIRECT_URL = "/"
 AUTHENTICATION_BACKENDS = ("django.contrib.auth.backends.ModelBackend",)
-
-"""CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": os.getenv("REDIS_LOCATION"),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        },
-    }
-}
-
-CELERY_BEAT_SCHEDULE = {
-    "send-reminders": {
-        "task": "medsite.tasks.send_appointment_reminders",
-        "schedule": crontab(hour=8, minute=0),
-    },
-    "cleanup-data": {
-        "task": "medsite.tasks.cleanup_old_data",
-        "schedule": crontab(day_of_week=0, hour=3),
-    },
-}
-
-CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"""
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
@@ -154,6 +134,7 @@ DATE_FORMAT = "d.m.Y"
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
+STATIC_ROOT = ""
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 MEDIA_URL = "/media/"
@@ -163,5 +144,3 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-REQUIRED_FIELDS = ["first_name", "last_name", "email"]

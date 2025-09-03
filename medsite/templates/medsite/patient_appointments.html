@@ -1,0 +1,46 @@
+{% extends 'medsite/base.html' %}
+{% block content %}
+<h2>Записи пациента</h2>
+<a class="btn btn-outline-primary btn-sm" href="{% url 'medsite:patients_list' %}">
+     Вернуться к списку пациентов
+</a>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Дата</th>
+            <th>Время</th>
+            <th>Врач</th>
+            <th>Статус</th>
+            <th>Причина обращения</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for appointment in appointments %}
+            <tr>
+                <td>{{ appointment.appointment_date }}</td>
+                <td>{{ appointment.appointment_time }}</td>
+                <td>{{ appointment.doctor.user.get_full_name }}</td>
+                <td>
+                    {% if appointment.status == 'pending' %}
+                        <span class="badge bg-warning">Ожидает</span>
+                    {% elif appointment.status == 'confirmed' %}
+                        <span class="badge bg-success">Подтверждена</span>
+                    {% elif appointment.status == 'cancelled' %}
+                        <span class="badge bg-danger">Отменена</span>
+                    {% else %}
+                        <span class="badge bg-info">Завершена</span>
+                    {% endif %}
+                </td>
+                    <td>{{ appointment.reason }}</td>                
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if not appointments %}
+    <div class="alert alert-info">
+        У пациента нет записей на прием
+    </div>
+{% endif %}
+{% endblock %}

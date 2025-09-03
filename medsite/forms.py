@@ -3,9 +3,13 @@ from datetime import datetime
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-from .models import Appointment, Diagnosis, Doctor, Feedback, Patient, Service
+from users.models import CustomUser
+from medsite.models import Appointment, Diagnosis, Doctor, Feedback, Patient, Service
+
+User = get_user_model()
 
 
 class PatientForm(forms.ModelForm):
@@ -28,28 +32,51 @@ class PatientForm(forms.ModelForm):
 
 
 class AppointmentForm(forms.ModelForm):
-    appointment_date = forms.DateField(
-        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}),
-        initial=timezone.now(),
-    )
-
-    appointment_time = forms.TimeField(
-        widget=forms.TimeInput(attrs={"type": "time", "class": "form-control"})
-    )
-
     class Meta:
         model = Appointment
-        fields = ["appointment_date", "appointment_time", "doctor", "service", "reason"]
+        fields = [
+            "patient",
+            "doctor",
+            "service",
+            "appointment_date",
+            "appointment_time",
+            "reason",
+        ]
         widgets = {
-            "reason": forms.Textarea(attrs={"rows": 4}),
+            "reason": forms.Textarea(attrs={"rows": 2, "class": "form-control"}),
+            "appointment_date": forms.DateInput(
+                attrs={"type": "date", "class": "form-control"}
+            ),
+            "appointment_time": forms.TimeInput(
+                attrs={"type": "time", "class": "form-control"}
+            ),
+            "patient": forms.Select(attrs={"class": "form-control"}),
+            "doctor": forms.Select(attrs={"class": "form-control"}),
+            "service": forms.Select(attrs={"class": "form-control"}),
+        }
+        labels = {
+            "reason": "Причина обращения",
+            "appointment_date": "Дата приема",
+            "appointment_time": "Время приема",
         }
 
     def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop("request", None)
         super().__init__(*args, **kwargs)
-        # Оптимизируем запрос к базе данных
-        self.fields["service"].queryset = Service.objects.all().select_related(
-            "category"
+
+        if self.request and self.request.user.is_authenticated:
+            if self.request.user.is_staff:
+                self.fields["patient"].queryset = CustomUser.objects.filter(
+                    user_type="patient"
+                )
+            else:
+                self.fields["patient"].initial = self.request.user
+                self.fields["patient"].disabled = True
+
+        self.fields["doctor"].queryset = Doctor.objects.filter(is_active=True).order_by(
+            "last_name"
         )
+        self.fields["service"].queryset = Service.objects.select_related("category")
 
     def clean(self):
         cleaned_data = super().clean()
@@ -58,9 +85,21 @@ class AppointmentForm(forms.ModelForm):
 
         if date and time:
             datetime_combined = timezone.make_aware(datetime.combine(date, time))
-            cleaned_data["datetime"] = datetime_combined
+            if datetime_combined < timezone.now():
+                raise ValidationError("Время записи должно быть в будущем")
 
+            cleaned_data["datetime"] = datetime_combined
         return cleaned_data
+
+
+class AdminAppointmentForm(forms.ModelForm):
+    class Meta:
+        model = Appointment
+        fields = ["patient", "doctor", "appointment_date", "appointment_time"]
+        widgets = {
+            "appointment_date": forms.DateInput(attrs={"type": "date"}),
+            "appointment_time": forms.TimeInput(attrs={"type": "time"}),
+        }
 
 
 class DoctorForm(forms.ModelForm):
@@ -68,8 +107,9 @@ class DoctorForm(forms.ModelForm):
         model = Doctor
         fields = ["specialization", "equipment_type", "description"]
 
-
-User = get_user_model()
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.fields["user"].queryset = User.objects.filter(user_type="doctor")
 
 
 class DoctorRegistrationForm(UserCreationForm):
@@ -86,6 +126,9 @@ class DoctorRegistrationForm(UserCreationForm):
         fields = ("password1", "password2", "email", "first_name", "last_name")
 
     def save(self, commit=True):
+
+        from medsite.models import Doctor
+
         user = super().save(commit=False)
         user.is_staff = True
         if commit:
@@ -130,18 +173,23 @@ class FeedbackForm(forms.ModelForm):
             raise forms.ValidationError("Пожалуйста, введите корректный email")
         return email
 
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
+
 
 class DiagnosisForm(forms.ModelForm):
     class Meta:
         model = Diagnosis
-        fields = ["appointment", "diagnosis_text"]
+        fields = ["appointment", "diagnosis_date", "description"]
+
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
+
         if user:
             self.initial["patient"] = user.pk
-            # Фильтруем доступные назначения только для текущего пациента
             self.fields["appointment"].queryset = Appointment.objects.filter(
                 patient=user
             )
