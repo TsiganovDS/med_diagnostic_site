@@ -1,15 +1,37 @@
 {% extends 'medsite/base.html' %}
-{% block title %}Специалисты отделения функциональной диагностики{% endblock %}
+{% block title %}История записей{% endblock %}
 {% block content %}
 <h2>История записей</h2>
-<ul>
-    {% for appointment in appointments %}
-    <li>
-        {{ appointment.appointment_date|date:"d.m.Y" }} {{ appointment.appointment_time|time:"H:i" }} - 
-        {{ appointment.service }}
-        <a href="{% url 'medsite:appointment_detail' appointment.pk %}">Подробнее</a>
-    </li>
-    {% endfor %}
+    <ul>
+    <thead class="table table-striped">
+        <thead class="table-info">
+            <tr>
+                <th>👨‍⚕️ Врач</th>
+                <th>📅 Дата</th>
+                <th>⏰ Время</th>
+                <th>🤒 Причина</th>
+                <th>⚙️ Действия</th>
+            </tr>
+                </thead>
+                    <tbody>
+                        {% for appointment in appointments %}
+                            <tr>
+                                <td> {{ appointment.doctor }}</td>
+                                <td>{{ appointment.appointment_date|date:'d.m.Y' }}</td>
+                                <td>{{ appointment.appointment_time|time:"H:i" }}</td>
+                                <td>{{ appointment.reason }}</td>
+                                <td>
+                                    <a href="{% url 'medsite:appointment_edit' pk=appointment.pk %}" class="btn btn-outline-primary btn-sm">
+                                        ✏️
+                                    </a>
+                                    <a href="{% url 'medsite:appointment_delete' pk=appointment.pk %}" class="btn btn-danger btn-sm">
+                                        🗑️
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </thead>
 </ul>
 <div class="pagination">
     {% if is_paginated %}

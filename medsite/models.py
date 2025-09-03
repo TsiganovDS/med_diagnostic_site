@@ -1,24 +1,11 @@
 import calendar
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 from django.template.defaultfilters import slugify
 from django.utils import timezone
-
-
-@receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def create_patient_profile(sender, instance, created, **kwargs):
-    if created:
-        Patient.objects.create(user=instance)
-
-
-@receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def save_patient_profile(sender, instance, **kwargs):
-    instance.patient_profile.save()
 
 
 class Patient(models.Model):
@@ -109,18 +96,15 @@ class Doctor(models.Model):
     specialization = models.TextField()
     description = models.TextField()
     is_active = models.BooleanField(default=True)
+    start_time = models.TimeField(default=time(9, 0))
+    end_time = models.TimeField(default=time(10, 0))
 
-    def is_working_time(self, appointment_datetime):
-        # Получаем расписание врача
-        schedule = self.schedule.filter(
-            weekday=appointment_datetime.weekday(), is_active=True
-        ).first()
+    def get_full_name(self):
+        full_name = f"{self.first_name} {self.last_name}"
+        return full_name.strip()
 
-        if not schedule:
-            return False
-
-        appointment_time = appointment_datetime.time()
-        return schedule.start_time <= appointment_time <= schedule.end_time
+    def get_short_name(self):
+        return self.first_name
 
     def __str__(self):
         return f"{self.last_name} {self.first_name} {self.middle_name}"
@@ -147,30 +131,31 @@ class Appointment(models.Model):
     """Модель записи к врачу"""
 
     patient = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="appointments",
-        null=False,
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="appointments"
     )
 
     doctor = models.ForeignKey(
-        Doctor, on_delete=models.SET_NULL, related_name="appointments", null=True
+        Doctor,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="appointments",
     )
 
-    appointment_date = models.DateTimeField()
-    appointment_time = models.TimeField()
-    reason = models.TextField(max_length=100, blank=True, null=True)
-    is_confirmed = models.BooleanField(default=False)
-    diagnosis = (
-        models.ForeignKey(
-            "Diagnosis",
-            on_delete=models.SET_NULL,
-            null=True,
-            blank=True,
-            related_name="appointments",
-        ),
+    reason = models.TextField(
+        max_length=100, blank=True, null=True, verbose_name="Причина обращения"
     )
-    diagnosis_text = models.TextField(blank=True, verbose_name="Диагноз")
+    appointment_date = models.DateField()
+    appointment_time = models.TimeField()
+    is_confirmed = models.BooleanField(default=False)
+    diagnoses = models.ForeignKey(
+        "Diagnosis",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="appointments",
+    )
+    description = models.TextField(blank=True, verbose_name="Диагноз")
     results = models.FileField(
         upload_to="diagnostics/", blank=True, null=True, verbose_name="Результаты"
     )
@@ -191,11 +176,20 @@ class Appointment(models.Model):
         default="pending",
     )
 
-    def get_full_datetime(self):
-        # Проверяем, что дата и время существуют
-        if self.appointment_date and self.appointment_time:
-            return datetime.combine(self.appointment_date, self.appointment_time)
-        return None
+    def is_working_time(self):
+        appointment_datetime = datetime.combine(
+            self.appointment_date, self.appointment_time
+        )
+
+        doctor_start_datetime = datetime.combine(
+            self.appointment_date, self.doctor.start_time
+        )
+
+        doctor_end_datetime = datetime.combine(
+            self.appointment_date, self.doctor.end_time
+        )
+
+        return doctor_start_datetime <= appointment_datetime <= doctor_end_datetime
 
     def clean(self):
         if not self.appointment_date or not self.appointment_time:
@@ -217,7 +211,6 @@ class Appointment(models.Model):
                     minutes=self.service.duration_minutes
                 )
 
-                # Добавляем проверку на пересечение записей
                 overlapping_appointments = Appointment.objects.filter(
                     doctor=self.doctor,
                     appointment_date=self.appointment_date,
@@ -247,19 +240,35 @@ class Appointment(models.Model):
 
     get_results_link.allow_tags = True
 
+    def __str__(self):
+        patient_name = self.patient.get_full_name() if self.patient else "Неизвестно"
+        doctor_name = self.doctor.get_full_name() if self.doctor else "Неизвестно"
+
+        date_str = ""
+        if self.appointment_date and self.appointment_time:
+            date_str = datetime.combine(
+                self.appointment_date, self.appointment_time
+            ).strftime("%d.%m.%Y %H:%M")
+
+        return f"Запись {patient_name} к {doctor_name} на {date_str}"
+
 
 class Diagnosis(models.Model):
-    patient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    results = models.FileField(upload_to="diagnosis_results/", blank=True, null=True)
-    appointment = models.ForeignKey(
-        Appointment, on_delete=models.CASCADE, related_name="diagnoses"
+    patient = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="Пациент"
     )
-    diagnosis_text = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    appointment = models.ForeignKey(
+        Appointment,
+        on_delete=models.CASCADE,
+        related_name="diagnoses_set",
+        null=True,
+        blank=True,
+    )
+    diagnosis_date = models.DateField()
+    description = models.TextField(verbose_name="Описание диагноза")
 
     def __str__(self):
-        return f"Диагноз для {self.patient.email} от {self.created_at}"
+        return f"Диагноз для {self.patient}: {self.text[:50]}..."
 
 
 class Feedback(models.Model):

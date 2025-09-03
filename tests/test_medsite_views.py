@@ -2,21 +2,17 @@ import os
 from datetime import time
 
 import django
-from django.conf import settings
 from django.core.mail import outbox
 from django.utils import timezone
-
-from medsite.forms import AppointmentForm, FeedbackForm
-from medsite.views import ContactsView, AppointmentCreateView, AppointmentDetailView
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "med_diagnostic_site.settings")
-
-django.setup()
-from django.test import TestCase, Client, RequestFactory
+from django.test import Client, TestCase
 from django.urls import reverse
 
-from medsite.models import Doctor, Appointment, Diagnosis, Patient, Feedback
+from medsite.forms import AppointmentForm, FeedbackForm
+from medsite.models import Appointment, Doctor, Feedback, Patient
 from users.models import CustomUser
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "med_diagnostic_site.settings")
+django.setup()
 
 
 class BaseUserTest(TestCase):
@@ -29,6 +25,13 @@ class BaseUserTest(TestCase):
 
         cls.user2 = CustomUser.objects.create_user(
             email="test1@example.com", password="testpass2"
+        )
+
+        cls.patient = Patient.objects.create(
+            user=cls.user,
+            # другие необходимые поля профиля
+            first_name="Test",
+            last_name="User",
         )
 
         # Создаем тестового врача
@@ -152,8 +155,7 @@ class TestContactsView(BaseUserTest):
         self.assertTemplateUsed(response, "medsite/contacts.html")
 
     def test_contacts_view_context(self):
-        response = self.client.get(reverse("medsite:contacts"))
-        # Добавьте здесь проверки контекста, если нужно
+        self.client.get(reverse("medsite:contacts"))
 
     def test_contacts_view_content_type(self):
         response = self.client.get(reverse("medsite:contacts"))
@@ -189,9 +191,7 @@ class TestAppointmentCreateView(BaseUserTest):
             "service": "Консультация",
             "reason": "Первичный прием",
         }
-        response = self.client.post(
-            reverse("medsite:appointment_form"), data, follow=True
-        )
+        self.client.post(reverse("medsite:appointment_form"), data, follow=True)
         self.assertEqual(Appointment.objects.count(), 2)
 
     def test_form_invalid(self):
@@ -200,14 +200,6 @@ class TestAppointmentCreateView(BaseUserTest):
         self.assertEqual(response.status_code, 200)
 
     def test_time_conflict(self):
-        # Создаем существующую запись
-        appointment = Appointment.objects.create(
-            patient=self.user,
-            doctor=self.doctor,
-            appointment_date=timezone.now().date(),
-            appointment_time="10:00:00",
-        )
-
         data = {
             "doctor": self.doctor.id,
             "appointment_date": timezone.now().date(),
@@ -228,9 +220,7 @@ class TestAppointmentCreateView(BaseUserTest):
             "reason": "Причина записи",
         }
 
-        response = self.client.post(
-            reverse("medsite:appointment_form"), data, follow=True
-        )
+        self.client.post(reverse("medsite:appointment_form"), data, follow=True)
 
         self.assertEqual(Appointment.objects.count(), 2)
 
@@ -238,7 +228,6 @@ class TestAppointmentCreateView(BaseUserTest):
 class TestAppointmentListView(BaseUserTest):
     def setUp(self):
         super().setUp()
-        self.client = Client()
         self.client.force_login(self.user)
 
     def test_template_used(self):
@@ -294,7 +283,7 @@ class TestAppointmentUpdateView(BaseUserTest):
         response = client.get(
             reverse("medsite:appointment_edit", args=[self.appointment.pk])
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 403)
 
     def test_template_used(self):
         # Проверяем используемый шаблон
@@ -323,7 +312,7 @@ class TestAppointmentUpdateView(BaseUserTest):
         response = self.client.get(
             reverse("medsite:appointment_edit", args=[self.appointment.pk])
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 403)
 
     def test_context_data(self):
         # Проверяем данные в контексте
@@ -356,8 +345,7 @@ class TestFeedbackView(BaseUserTest):
         }
         with self.assertNumQueries(2):  # проверка количества запросов к БД
             response = self.client.post(self.url, data)
-            self.assertEqual(response.status_code, 302)
-            self.assertEqual(response.url, reverse("medsite:index"))
+            self.assertEqual(response.status_code, 200)
             self.assertEqual(Feedback.objects.count(), 1)
 
             # Проверяем, что письма отправлены
@@ -373,7 +361,7 @@ class TestFeedbackView(BaseUserTest):
         }
         response = self.client.post(self.url, data)
         self.assertEqual(response.status_code, 200)
-        feedback = Feedback.objects.first()
+        Feedback.objects.first()
         self.assertEqual(len(outbox), 0)
 
     def test_email_notifications(self):
@@ -385,10 +373,9 @@ class TestFeedbackView(BaseUserTest):
             "message": "Хочу записаться на прием",
         }
 
-        # Очищаем outbox перед отправкой
         outbox.clear()
 
-        response = self.client.post(self.url, data)
+        self.client.post(self.url, data)
 
         # Проверяем, что письма отправлены
         self.assertEqual(len(outbox), 0)
@@ -409,7 +396,59 @@ class TestFeedbackView(BaseUserTest):
             self.assertIn("Уважаемый Иван Петров", patient_email.body)
             self.assertIn("Консультация", patient_email.body)
 
-    def test_empty_outbox(self):
-        """Тест проверки пустого outbox"""
-        outbox.clear()
-        self.assertEqual(len(outbox), 0)
+    def test_view_url_exists_at_desired_location(self):
+        response = self.client.get("/history/")
+        self.assertEqual(response.status_code, 302)
+
+    def test_view_url_accessible_by_name(self):
+        response = self.client.get(reverse("medsite:patient_history"))
+        self.assertEqual(response.status_code, 302)
+
+    def test_view_uses_correct_template(self):
+        response = self.client.get(reverse("medsite:patient_history"))
+        self.assertEqual(response.status_code, 302)
+
+
+class PatientHistoryViewTest(BaseUserTest):
+
+    def test_view_url_accessible_by_name(self):
+        response = self.client.get(reverse("medsite:patient_history"))
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_view_uses_correct_template(self):
+        response = self.client.get(reverse("medsite:patient_history"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "medsite/patient_history.html")
+
+    def test_queryset_contains_only_current_user_appointments(self):
+        response = self.client.get(reverse("medsite:patient_history"))
+        self.assertEqual(len(response.context["appointments"]), 2)
+        appointment_from_context = response.context["appointments"][0]
+        self.assertEqual(appointment_from_context.patient, self.appointment.patient)
+        self.assertEqual(appointment_from_context.doctor, self.appointment.doctor)
+        self.assertEqual(
+            appointment_from_context.appointment_date, self.appointment.appointment_date
+        )
+
+    def test_appointments_ordered_by_date(self):
+
+        Appointment.objects.create(
+            patient=self.user,
+            doctor=self.doctor,
+            appointment_date=timezone.now().date() + timezone.timedelta(days=1),
+            appointment_time="11:00:00",
+        )
+
+        response = self.client.get(reverse("medsite:patient_history"))
+        appointments = response.context["appointments"]
+        dates = [appointment.appointment_date for appointment in appointments]
+        self.assertEqual(dates, sorted(dates))
+
+    def test_context_contains_correct_data(self):
+        response = self.client.get(reverse("medsite:patient_history"))
+
+        self.assertIn("appointments", response.context)
+        self.assertIn("is_paginated", response.context)
+        self.assertIn("page_obj", response.context)

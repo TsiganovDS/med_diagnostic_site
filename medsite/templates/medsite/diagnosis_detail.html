@@ -1,0 +1,20 @@
+{% extends 'medsite/base.html' %}
+
+{% block content %}
+    <h1>Диагностика</h1>
+    <dl class="row">
+        <dt class="col-sm-3">Пациент:</dt>
+        <dd class="col-sm-9">{{ diagnosis.appointment.patient }}</dd>
+
+        <dt class="col-sm-3">Приём:</dt>
+        <dd class="col-sm-9">{{ diagnosis.appointment }}</dd>
+
+        <dt class="col-sm-3">Дата постановки диагноза:</dt>
+        <dd class="col-sm-9">{{ diagnosis.created_at|date:'d.m.Y H:i' }}</dd>
+
+        <dt class="col-sm-3">Текст диагноза:</dt>
+        <dd class="col-sm-9">{{ diagnosis.diagnosis_text }}</dd>
+    </dl>
+
+    <a href="{% url 'appointment_detail' diagnosis.appointment.pk %}" class="btn btn-secondary">Вернуться к приёму</a>
+{% endblock %}

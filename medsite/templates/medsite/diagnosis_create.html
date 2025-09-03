@@ -1,0 +1,27 @@
+{% extends 'medsite/base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <h1>Создание диагноза</h1>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="mb-3">
+            <label for="{{ form.appointment.id_for_label }}">Приём:</label>
+            {{ form.appointment }}
+            {{ form.appointment.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="{{ form.diagnosis_date.id_for_label }}">Дата постановки диагноза:</label>
+            {{ form.diagnosis_date }}
+            {{ form.diagnosis_date.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="{{ form.description.id_for_label }}">Описание диагноза:</label>
+            {{ form.description }}
+            {{ form.description.errors }}
+        </div>
+        <button type="submit" class="btn btn-primary">Создать диагноз</button>
+    </form>
+</div>
+{% endblock %}

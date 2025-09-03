@@ -29,7 +29,7 @@
                         </li>
 
                         <li class="nav-item">
-                            <a class="btn btn-outline-primary btn-sm" href="{% url 'medsite:services_page' %}">Наши услуги</a>
+                            <a class="btn btn-outline-primary btn-sm" href="{% url 'medsite:services' %}">Наши услуги</a>
                         </li>
 
                         <li class="nav-item">
@@ -38,6 +38,14 @@
                         {% if user.is_authenticated %}
                             <ul class="navbar-nav me-3">
                                 <li class="nav-item">
+                                    <ul class="nav">
+                                        {% if user.is_staff or user.is_superuser %}
+                                            <!-- Ссылки только для администраторов -->
+                                            <li><a class="btn btn-outline-primary btn-sm" href="{% url 'medsite:admin_appointment_list' %}">Управление записями</a></li>
+                                            <li><a class="btn btn-outline-primary btn-sm" href="{% url 'medsite:admin_appointment_form' %}">Создать запись</a></li>
+                                            <li><a class="btn btn-outline-primary btn-sm" href="{% url 'medsite:patients_list' %}">Список пациентов</a></li>
+                                        {% endif %}
+                                    </ul>
                                     <span class="me-3">👋 {{ greeting }}, {{ user.first_name|default:user.email }}!</span>
                                     <a href="{% url 'users:profile' %}" class="btn btn-outline-info btn-sm me-2">👤 Кабинет пациента</a>
                                     <form action="{% url 'users:logout' %}" method="post" style="display:inline;">

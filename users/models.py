@@ -1,5 +1,8 @@
-from django.contrib.auth.models import AbstractUser, Group, Permission, PermissionsMixin
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.contrib.auth.models import (
+    AbstractBaseUser,
+    BaseUserManager,
+    PermissionsMixin,
+)
 from django.db import models
 
 
@@ -20,6 +23,12 @@ class CustomUserManager(BaseUserManager):
 
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
+    USER_TYPES = [
+        ("doctor", "Врач"),
+        ("patient", "Пациент"),
+    ]
+
+    user_type = models.CharField(max_length=10, choices=USER_TYPES, default="patient")
     email = models.EmailField(unique=True, verbose_name="E-mail")
     first_name = models.CharField(max_length=30, blank=True, verbose_name="Имя")
     last_name = models.CharField(max_length=30, blank=True, verbose_name="Фамилия")
@@ -34,5 +43,21 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
+    def save(self, *args, **kwargs):
+        from medsite.models import Doctor
+
+        if self.user_type == "doctor" and not hasattr(self, "doctor_profile"):
+            Doctor.objects.create(user=self)
+        super().save(*args, **kwargs)
+
+    def get_full_name(self):
+        full_name = f"{self.first_name} {self.last_name}"
+        return full_name.strip()
+
+    def get_short_name(self):
+        return self.first_name
+
     def __str__(self):
+        if self.first_name or self.last_name:
+            return f"{self.first_name} {self.last_name}".strip()
         return self.email

@@ -1,29 +1,15 @@
-FROM python:3.12.3
-
-# Включаем немедленное выполнение вывода программы
-ENV PYTHONUNBUFFERED=1
+FROM python:3.12
 
 # Устанавливаем рабочую директорию в контейнере
 WORKDIR /app
 
-# Обновляем список пакетов и устанавливаем curl и gnupg для загрузки Poetry
-RUN apt-get update
-RUN apt-get install -y curl gnupg
-
-# Загружаем и устанавливаем Poetry
-RUN curl -sSL https://install.python-poetry.org | python -
-
 # Копируем файл с зависимостями и устанавливаем их
-COPY poetry.lock pyproject.toml ./
-RUN poetry install
+RUN pip install --upgrade pip
+COPY requirements.txt ./
+RUN pip install -r requirements.txt
 
 # Копируем остальные файлы проекта в контейнер
 COPY . .
 
-
-# Порт, который будет использовать контейнер
+# Открываем порт 8000 для взаимодействия с приложением
 EXPOSE 8000
-
-
-# Определяем команду для запуска приложения
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

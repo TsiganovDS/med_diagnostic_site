@@ -1,17 +1,25 @@
 {% extends 'medsite/base.html' %}
 {% block content %}
     <h2>Добавление результатов диагностики</h2>
-    {% if diagnosis %}
-        <!-- Форма редактирования диагноза -->
-        <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit">Сохранить</button>
-        </form>
-    {% else %}    
-        <p>Диагноз не найден</p>
+    {% if diagnosis and diagnosis.pk is not None %}
+    <!-- Если диагноз существует -->
+    {% if appointment.id %}
+        <a class="btn btn-outline-primary btn-sm" href="{% url 'medsite:diagnosis_update' appointment.id diagnosis.pk %}">Редактировать диагноз</a>
+    {% else %}
+        Нет назначенного приема!
     {% endif %}
-    <a class="btn btn-outline-primary" href="{% url 'medsite:appointment_detail' appointment_id %}">Вернуться к назначению</a>
-    <a class="btn btn-outline-primary" href="{% url 'medsite:patient_history' %}">Вернуться к истории записей</a>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Сохранить</button>
+    </form>
+{% else %}
+    <!-- Если диагноза пока нет -->
+    <a class="btn btn-outline-primary btn-sm" href="{% url 'medsite:diagnosis_create' appointment.id %}">Создать диагноз</a>
+{% endif %}
+
+    <!-- Кнопки возврата -->
+    <a class="btn btn-outline-primary btn-sm" href="{% url 'medsite:appointment_detail' appointment.id %}">Вернуться к назначению</a>
+    <a class="btn btn-outline-primary btn-sm" href="{% url 'medsite:patient_history' %}">Вернуться к истории записей</a>
 {% endblock %}
 

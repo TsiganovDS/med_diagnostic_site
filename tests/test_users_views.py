@@ -1,13 +1,10 @@
-from django.test import TestCase, Client
+from django.test import Client, TestCase
 from django.urls import reverse
-from django.contrib.auth.models import User
-from django.core.mail import outbox
+from django.utils import timezone
 
 from medsite.models import Appointment
 from users.forms import CustomUserCreationForm
 from users.models import CustomUser
-from django.utils import timezone
-from django.core import mail
 
 
 class RegisterViewTest(TestCase):

@@ -1,12 +1,14 @@
 from datetime import datetime
 
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.core.mail import EmailMultiAlternatives
-from django.http import JsonResponse
+from django.core.mail import EmailMultiAlternatives, send_mail
+from django.db.models import Q
+from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import View, generic
@@ -20,7 +22,6 @@ from django.views.generic import (
 )
 
 from config import settings
-from config.settings import ADMIN_EMAIL_LIST
 from medsite.forms import (
     AppointmentForm,
     DiagnosisForm,
@@ -29,8 +30,9 @@ from medsite.forms import (
     FeedbackForm,
     PatientForm,
 )
+from users.models import CustomUser
 
-from .models import Appointment, Diagnosis, Doctor, Patient
+from .models import Appointment, Diagnosis, Doctor, Patient, ServiceCategory
 
 
 class GreetingMixin:
@@ -41,7 +43,7 @@ class GreetingMixin:
             return "Доброе утро"
         elif 12 <= current_hour < 18:
             return "Добрый день"
-        elif 18 <= current_hour < 00:
+        elif 18 <= current_hour < 24:
             return "Добрый вечер"
         else:
             return "Доброй ночи"
@@ -64,7 +66,6 @@ class HomeView(GreetingMixin, TemplateView):
 
         return context
 
-
 class AboutView(GreetingMixin, TemplateView):
     """Контроллер для отображения страницы о компании."""
 
@@ -77,10 +78,19 @@ class AboutView(GreetingMixin, TemplateView):
         return context_data
 
 
-class ServicesView(GreetingMixin, TemplateView):
-    """Контроллер для отображения страницы услуги."""
+class ServicesListView(GreetingMixin, generic.ListView):
+    model = ServiceCategory
+    template_name = "medsite/services.html"
+    context_object_name = "categories"
 
-    template_name = "medsite/services_page.html"
+    def get_queryset(self):
+        # Предварительно загружаем связанные услуги для оптимизации
+        return ServiceCategory.objects.prefetch_related("services")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Здесь можно добавить дополнительную информацию в контекст
+        return context
 
 
 class ContactsView(GreetingMixin, TemplateView):
@@ -97,22 +107,27 @@ class AppointmentCreateView(GreetingMixin, LoginRequiredMixin, CreateView):
     template_name = "medsite/appointment_form.html"
     form_class = AppointmentForm
     success_url = reverse_lazy("users:profile")
+    model = Appointment
 
-    @method_decorator(login_required)
-    def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["request"] = self.request
+        return kwargs
 
-    def get(self, request):
-        # Отображаем пустую форму при GET-запросе
-        form = AppointmentForm()
-        return render(request, "medsite/appointment_form.html", {"form": form})
+    def get_initial(self):
+        initial = super().get_initial()
+        initial["patient"] = self.request.user
+        return initial
 
     def form_valid(self, form):
         try:
-            # Получаем очищенные данные
+            # Проверяем, если поле patient не заполнено
+            if not form.cleaned_data.get("patient"):
+                form.instance.patient = self.request.user
+
             cleaned_data = form.cleaned_data
 
-            # Конвертируем дату и время в timezone-aware формат
+            # Создаем datetime объект
             appointment_datetime = timezone.make_aware(
                 datetime.combine(
                     cleaned_data["appointment_date"], cleaned_data["appointment_time"]
@@ -126,7 +141,7 @@ class AppointmentCreateView(GreetingMixin, LoginRequiredMixin, CreateView):
                 appointment_time=appointment_datetime.time(),
             ).exists():
                 messages.error(self.request, "Это время уже занято другим пациентом")
-                return super().form_invalid(form)  # Возвращаем форму с ошибкой
+                return self.form_invalid(form)
 
             # Сохраняем запись
             appointment = form.save(commit=False)
@@ -138,7 +153,129 @@ class AppointmentCreateView(GreetingMixin, LoginRequiredMixin, CreateView):
 
         except Exception as e:
             messages.error(self.request, f"Произошла ошибка при сохранении: {str(e)}")
-            return super().form_invalid(form)
+            return self.form_invalid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["user_model"] = get_user_model()
+        return context
+
+
+class AppointmentUpdateView(GreetingMixin, UpdateView):
+    model = Appointment
+    form_class = AppointmentForm
+    template_name = "medsite/appointments_edit.html"
+    success_url = reverse_lazy("users:profile")
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["request"] = self.request
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Редактирование записи"
+        return context
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        return response
+
+    def test_func(self):
+        # Проверка прав доступа
+        appointment = self.get_object()
+        return self.request.user.is_staff or self.request.user == appointment.patient
+
+    def get_success_url(self):
+        # Можно настроить перенаправление
+        return self.success_url
+
+    def dispatch(self, request, *args, **kwargs):
+        # Дополнительная проверка перед обработкой запроса
+        self.object = self.get_object()
+        if not self.test_func():
+            return HttpResponseForbidden("У вас нет прав на редактирование этой записи")
+        return super().dispatch(request, *args, **kwargs)
+
+
+class AdminAppointmentCreateView(GreetingMixin, CreateView):
+    model = Appointment
+    form_class = AppointmentForm
+    template_name = "medsite/admin_appointment_form.html"
+    success_url = reverse_lazy("medsite:admin_appointment_list")
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["request"] = self.request
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Запись"
+        return context
+
+    def form_valid(self, form):
+        try:
+            response = super().form_valid(form)
+
+            appointment = form.save()
+
+            service_name = (
+                appointment.service.name if appointment.service else "Не указана"
+            )
+            service_description = (
+                appointment.service.description if appointment.service else ""
+            )
+
+            send_mail(
+                subject="📅 Запись на прием:",
+                message=(
+                    f"Здравствуйте, {appointment.patient.first_name}!\n\n"
+                    f"Вы записаны на прием:\n"
+                    f"Врач: {appointment.doctor.get_full_name()}\n"
+                    f"Услуга: {service_name}\n"
+                    f"Описание услуги: {service_description}\n"
+                    f"Дата приема: {appointment.appointment_date}\n"
+                    f"Время: {appointment.appointment_time}\n\n"
+                    f"С уважением,\nКоманда Медицинской диагностики"
+                ),
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[appointment.patient.email],
+                fail_silently=False,
+            )
+
+            messages.success(self.request, "Запись успешно обновлена")
+
+            return response
+
+        except Exception as e:
+            # Если произошла ошибка при отправке письма
+            messages.error(
+                self.request, f"Произошла ошибка при обновлении записи: {str(e)}"
+            )
+            return self.form_invalid(form)
+
+
+class AdminAppointmentsListView(GreetingMixin, UserPassesTestMixin, ListView):
+    model = Appointment
+    template_name = "medsite/admin_appointment_list.html"
+    context_object_name = "appointments"
+    paginate_by = 10
+
+    def test_func(self):
+        return self.request.user.is_staff
+
+    def get_queryset(self):
+        return (
+            Appointment.objects.select_related("patient", "doctor__user")
+            .prefetch_related("diagnoses")
+            .order_by("-appointment_date")
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["total_appointments"] = self.get_queryset().count()
+        return context
 
 
 class AppointmentListView(GreetingMixin, ListView):
@@ -152,24 +289,31 @@ class AppointmentListView(GreetingMixin, ListView):
         )
 
 
-class AppointmentUpdateView(GreetingMixin, UpdateView):
-    model = Appointment
-    form_class = AppointmentForm
-    template_name = "medsite/appointments_edit.html"
-    success_url = reverse_lazy("users:profile")
-
-
 class AppointmentDetailView(GreetingMixin, DetailView):
     model = Appointment
-    template_name = "medsite/appointments_detail.html"
+    template_name = "medsite/appointment_detail.html"
     context_object_name = "appointment"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        appointment = self.object
+
+        # Безопасное получение связанных объектов
         try:
-            context["diagnosis"] = self.object.diagnosis
-        except Diagnosis.DoesNotExist:
-            context["diagnosis"] = None
+            context["diagnoses"] = (
+                appointment.diagnoses.all() if appointment.diagnoses else []
+            )
+        except AttributeError:
+            context["diagnoses"] = []
+
+        # Другие связанные объекты
+        try:
+            context["another_related"] = (
+                appointment.another_field.all() if appointment.another_field else []
+            )
+        except AttributeError:
+            context["another_related"] = []
+
         return context
 
 
@@ -241,7 +385,7 @@ class FeedbackView(GreetingMixin, View):
 
         # Сообщение для администраторов
         admin_recipients = getattr(
-            settings, ADMIN_EMAIL_LIST, ["dm.tsiganov@icloud.com"]
+            settings, "ADMIN_EMAIL_LIST", ["dm.tsiganov@icloud.com"]
         )
         if not isinstance(admin_recipients, list):
             admin_recipients = admin_recipients
@@ -312,67 +456,102 @@ class PatientHistoryView(GreetingMixin, LoginRequiredMixin, ListView):
         )
 
 
-class DiagnosisUpdateView(
-    GreetingMixin, LoginRequiredMixin, UserPassesTestMixin, generic.UpdateView
-):
+class DiagnosisUpdateView(GreetingMixin, UpdateView):
     model = Diagnosis
     form_class = DiagnosisForm
-    template_name = "medsite/diagnosis_update.html"
-    success_url = reverse_lazy("medsite:patient_history")
+    template_name = "medsite/diagnosis_form.html"
 
-    def test_func(self):
-        # Проверка прав доступа
-        diagnosis = self.get_object()
-        return self.request.user.is_staff or self.request.user == diagnosis.patient
-
-    def get(self, request, appointment_id):
-        try:
-            appointment = get_object_or_404(Appointment, pk=appointment_id)
-            diagnosis = get_object_or_404(Diagnosis, appointment=appointment)
-            # Ваш код для отображения формы
-            return render(
-                request,
-                "medsite/diagnosis_form.html",
-                {"diagnosis": diagnosis, "appointment": appointment},
-            )
-        except Diagnosis.DoesNotExist:
-            messages.error(request, "Диагноз не найден")
-            return redirect("medsite/appointment_detail", pk=appointment_id)
-
-    def post(self, request, appointment_id):
-        try:
-            appointment = get_object_or_404(Appointment, pk=appointment_id)
-            diagnosis = get_object_or_404(Diagnosis, appointment=appointment)
-            form = DiagnosisForm(request.POST, instance=diagnosis)
-            if form.is_valid():
-                form.save()
-                return redirect("appointment_detail", pk=appointment_id)
-            return render(request, "medsite/diagnosis_form.html", {"form": form})
-        except Diagnosis.DoesNotExist:
-            messages.error(request, "Диагноз не найден")
-            return redirect("appointment_detail", pk=appointment_id)
-
-
-class DiagnosisCreateView(GreetingMixin, View):
-    @method_decorator(login_required)
-    def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
-
-    def get(self, request):
-        form = DiagnosisForm(user=request.user)
-        return render(request, "medsite/diagnosis_form.html", {"form": form})
-
-    def post(self, request):
-        form = DiagnosisForm(request.POST, user=request.user)
-        if form.is_valid():
-            diagnosis = form.save(commit=False)
-            diagnosis.patient = request.user
-            diagnosis.save()
-            messages.success(request, "Диагноз успешно создан")
-            return redirect("appointment_list")
-        return render(request, "medsite/diagnosis_form.html", {"form": form})
+    def get_object(self, queryset=None):
+        # Получаем диагноз по diagnosis_id из URL
+        return get_object_or_404(Diagnosis, pk=self.kwargs["pk"])
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs["user"] = self.request.user
+        kwargs.update({"user": self.request.user})
         return kwargs
+
+    def get_success_url(self):
+        # Используем правильный ключ для получения appointment_id
+        return reverse(
+            "medsite:appointment_detail", kwargs={"pk": self.kwargs["appointment_id"]}
+        )
+
+
+class DiagnosisCreateView(GreetingMixin, CreateView):
+    model = Diagnosis
+    form_class = DiagnosisForm
+    template_name = "medsite/diagnosis_create.html"
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs.update({"user": self.request.user})
+        return kwargs
+
+    def form_valid(self, form):
+        appointment_id = self.kwargs.get("appointment_id")
+        if appointment_id:
+            form.instance.appointment = get_object_or_404(
+                Appointment, id=appointment_id
+            )
+            form.instance.patient = self.request.user  # Устанавливаем пользователя
+            return super().form_valid(form)
+        else:
+            form.add_error(None, "Недостаточно данных для создания диагноза.")
+            return self.form_invalid(form)
+
+    def get_success_url(self):
+        return reverse(
+            "medsite:appointment_detail", kwargs={"pk": self.kwargs["appointment_id"]}
+        )
+
+
+class DiagnosisDetailView(GreetingMixin, DetailView):
+    model = Diagnosis
+    template_name = "medsite/diagnosis_detail.html"
+    context_object_name = "diagnosis"
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.select_related("appointment").filter(
+            appointment__patient=self.request.user
+        )
+
+
+class PatientListView(GreetingMixin, ListView):
+    model = CustomUser
+    template_name = "medsite/patients_list.html"
+    context_object_name = "patients"
+    paginate_by = 10
+
+    def get_queryset(self):
+        queryset = CustomUser.objects.filter(
+            user_type="patient", doctor_profile__isnull=True
+        ).order_by("last_name")
+
+        # Добавляем поиск
+        query = self.request.GET.get("q")
+        if query:
+            queryset = queryset.filter(
+                Q(first_name__icontains=query)
+                | Q(last_name__icontains=query)
+                | Q(email__icontains=query)
+            )
+
+        return queryset
+
+
+class PatientAppointmentsView(GreetingMixin, ListView):
+    model = Appointment
+    template_name = "medsite/patient_appointments.html"
+    context_object_name = "appointments"
+
+    def get_queryset(self):
+        patient_id = self.kwargs["patient_id"]
+        return Appointment.objects.filter(patient_id=patient_id).order_by(
+            "-appointment_date"
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["patient_id"] = self.kwargs["patient_id"]
+        return context

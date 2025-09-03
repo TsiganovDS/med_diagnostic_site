@@ -1,0 +1,45 @@
+{% extends 'medsite/base.html' %}
+
+{% block title %}Список записей{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Список записей на приём</h2>
+    <p>Всего записей: {{ total_appointments }}</p>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Пациент</th>
+                <th>Врач</th>
+                <th>Дата</th>
+                <th>Время</th>
+                <th>Причина обращения</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for appointment in appointments %}
+            <tr>
+                <td>{{ appointment.patient.get_full_name }}</td>
+                <td>{{ appointment.doctor.user.get_full_name }}</td>
+                <td>{{ appointment.appointment_date }}</td>
+                <td>{{ appointment.appointment_time }}</td>
+                <td>{{ appointment.reason }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if is_paginated %}
+    <div>
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}">Предыдущая</a>
+        {% endif %}
+        Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">Следующая</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
