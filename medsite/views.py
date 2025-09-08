@@ -364,32 +364,25 @@ class FeedbackView(GreetingMixin, View):
 
     def post(self, request, *args, **kwargs):
         form = self.form_class(request.POST)
-        try:
-            feedback = form.save(commit=False)
-            if request.user.is_authenticated:
-                feedback.user = request.user
-            feedback.save()
 
-            self.send_notification_email(feedback)
-            return redirect("medsite:index")
+        feedback = form.save(commit=False)
+        if request.user.is_authenticated:
+            feedback.user = request.user
+        feedback.save()
 
-        except Exception:
-            return JsonResponse(
-                {"success": False, "message": "Произошла ошибка при обработке запроса"}
-            )
+        self.send_notification_email(feedback)
+        return redirect("medsite:index")
 
     def send_notification_email(self, feedback):
-        # Проверяем настройки email в settings
         if not settings.EMAIL_HOST or not settings.EMAIL_HOST_USER:
             raise Exception("Не настроены параметры email в settings.py")
 
-        # Сообщение для администраторов
-        admin_recipients = getattr(
-            settings, "ADMIN_EMAIL_LIST", ["dm.tsiganov@icloud.com"]
-        )
-        if not isinstance(admin_recipients, list):
-            admin_recipients = admin_recipients
+        admin_recipients = getattr(settings, 'ADMIN_EMAIL_LIST', ['dm.tsiganov@icloud.com'])
 
+        if not isinstance(admin_recipients, list):
+            admin_recipients = [admin_recipients]
+
+        # Сообщение для администраторов
         admin_email = EmailMultiAlternatives(
             "Новое сообщение от пациента",
             f"От: {feedback.name} ({feedback.email})\n"
